@@ -919,7 +919,7 @@ $('#setBtn').onclick=()=>{
    '<div class="field"><span class="lbl">İsim dili</span><select id="sLang"><option value="tr-TR">Türkçe</option><option value="en-US">Orijinal / İngilizce</option></select></div>'+
    '<div class="row"><button class="btn" id="sCsv" style="flex:1"><span class="ms">download</span>CSV indir</button><button class="btn" id="sBk" style="flex:1"><span class="ms">save</span>Yedek al</button><button class="btn" id="sRs" style="flex:1"><span class="ms">upload</span>Yedek yükle</button></div>'+
    '<input type="file" id="sFile" accept=".json" class="hide">'+
-   '<button class="btn" id="sSync"><span class="ms">cloud_sync</span>Cihazlar arası senkron <i id="syncDot2"></i></button><button class="btn" id="sKey"><span class="ms">key</span>TMDB anahtarını değiştir</button>'+
+   '<button class="btn" id="sSeed"><span class="ms">history</span>Geçmişi yeniden yükle</button><button class="btn" id="sSync"><span class="ms">cloud_sync</span>Cihazlar arası senkron <i id="syncDot2"></i></button><button class="btn" id="sKey"><span class="ms">key</span>TMDB anahtarını değiştir</button>'+
    '<p class="note">Senkron açıksa işaretlerin tüm cihazlarında aynı kalır; kapalıysa yalnız bu tarayıcıda saklanır.</p>');
   o.querySelector('#sSort').value=SORT;o.querySelector('#sMin').value=MINV;o.querySelector('#sLang').value=LANG;
   o.querySelector('#sSort').onchange=e=>{SORT=e.target.value;SV('sort',SORT);reset()};
@@ -935,6 +935,7 @@ $('#setBtn').onclick=()=>{
   o.querySelector('#sRs').onclick=()=>o.querySelector('#sFile').click();
   o.querySelector('#sFile').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);Object.entries(d).forEach(([k,v])=>{if(v&&typeof v==='object'){DATA[k]=Object.assign(DATA[k]||{},v)}});SV('marks',DATA);o.remove();toast('Yedek yüklendi');go(VIEW);reset()}catch(err){toast('Dosya okunamadı')}})};
   o.querySelector('#sKey').onclick=()=>{o.remove();showKey()};
+  o.querySelector('#sSeed').onclick=()=>{o.remove();seedAll(true)};
   o.querySelector('#sSync').onclick=()=>{o.remove();showSync()};
 };
 function showKey(){$('#keybox').classList.remove('hide');$$('.view').forEach(v=>v.classList.add('hide'))}
@@ -1018,10 +1019,32 @@ function showSync(){
   o.querySelector('#ghOff').onclick=()=>{['gh_token','gh_gist','sync_base','sync_at'].forEach(k=>{try{localStorage.removeItem(k)}catch(e){}});setSyncDot('off');o.remove();toast('Senkron bu cihazda kapatıldı')};
 }
 
+
+/* ---------- Gömülü geçmişi bir kerede listeye işle ---------- */
+async function seedAll(force){
+  if(!KEY||(!force&&LS('seeds_all_v1')))return;
+  const jobs=[];
+  Object.keys(SEED).forEach(n=>SEED[n].forEach(e=>jobs.push({t:'tv',q:n,y:e.y})));
+  Object.keys(TFIX).forEach(n=>{if(!SEED[n])jobs.push({t:'tv',q:n,y:''})});
+  Object.keys(FSEED).forEach(n=>jobs.push({t:'movie',q:n,y:FSEED[n]}));
+  let done=0,hit=0;const total=jobs.length;
+  toast('Geçmiş yükleniyor… 0/'+total);
+  async function w(){while(jobs.length){const j=jobs.shift();
+    try{const p={query:j.q,include_adult:'false'};if(j.y)p[j.t==='tv'?'first_air_date_year':'year']=j.y;
+      const d=await api('/search/'+j.t,p);
+      for(const x of (d.results||[]).slice(0,5)){const b=Object.keys(DATA).length;seed(j.t,x,metaOf(j.t,x));if(Object.keys(DATA).length>b){hit++;break}}
+    }catch(e){}
+    done++;if(done%20===0)toast('Geçmiş yükleniyor… '+done+'/'+total);}}
+  await Promise.all(Array.from({length:6},w));
+  SV('seeds_all_v1',1);SV('marks',DATA);
+  try{strip();go(VIEW)}catch(e){}
+  toast('Geçmiş yüklendi: '+hit+' kayıt eşleşti');
+}
+
 /* ---------- Başlat ---------- */
 chips();hidePaint();strip();
 if(KEY){loadGenres();reset()}else showKey();
-syncNow(true);
+syncNow(true).then(()=>seedAll());
 </script>
 <script>
 /* Presentation and accessibility enhancements. No storage schema or application logic changes. */
