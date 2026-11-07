@@ -655,7 +655,7 @@ function card(t,x){
   c.innerHTML='<div class="post">'+(meta.p?'<img loading="lazy" alt="" src="'+IMG+'w342'+meta.p+'">':'<div class="ph">'+esc(meta.n)+'</div>')+
     '<span class="rk">#'+RANK+'</span><span class="old hide">Netleştir</span>'+
     '<button class="heart" aria-label="Beğendim"><span class="ms">favorite</span></button>'+
-    '<div class="meta"><small>'+rate+esc(meta.y)+'</small><h3 title="'+esc(meta.n)+'">'+esc(meta.n)+'</h3></div></div>'+
+    '<div class="meta"><small>'+rate+esc(meta.y)+(Q?(t==='tv'?' · Dizi':' · Film'):'')+'</small><h3 title="'+esc(meta.n)+'">'+esc(meta.n)+'</h3></div></div>'+
     '<div class="pad">'+ORDER.map(s=>'<button data-s="'+s+'"><span class="ms">'+ST[s].i+'</span>'+(s===3?'İlgimi çekmiyor':ST[s].l)+'</button>').join('')+'</div>';
   const paint=()=>{const s=get(k);c.dataset.s=s.s||0;
     c.querySelectorAll('.pad button').forEach(b=>b.className=(+b.dataset.s===s.s)?'a'+s.s:'');
@@ -677,7 +677,7 @@ async function more(){
   LOADING=true;msg.textContent='Yükleniyor…';
   try{
     let d;
-    if(Q){d=await api('/search/'+TYPE,{query:Q,include_adult:'false',page:PAGE+1})}
+    if(Q){d=await api('/search/multi',{query:Q,include_adult:'false',page:PAGE+1});d.results=(d.results||[]).filter(x=>x.media_type==='tv'||x.media_type==='movie')}
     else{
       const p={sort_by:SORT,'vote_count.gte':MINV,include_adult:'false',page:PAGE+1};
       if(TYPE==='tv')p.without_genres='10762,10763,10764,10766,10767';
@@ -685,7 +685,7 @@ async function more(){
       d=await api('/discover/'+TYPE,p);
     }
     PAGE++;if(PAGE>=Math.min(d.total_pages||1,500))DONE=true;
-    (Q?d.results:d.results.filter(ok)).forEach(x=>card(TYPE,x));
+    if(Q)d.results.forEach(x=>card(x.media_type,x));else d.results.filter(ok).forEach(x=>card(TYPE,x));
     msg.textContent=DONE?(grid.children.length?'Liste bitti':'Sonuç yok'):'';
     applyVis();strip();
   }catch(e){
