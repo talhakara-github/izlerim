@@ -582,6 +582,32 @@ async function openImdb(k,name){
   }catch(e){if(w)w.location.href=fallback;else window.open(fallback,'_blank')}
 }
 
+/* ---------- Fragman (YouTube) ---------- */
+const TRL=LS('trl')||{};
+function ytSearch(name,y){return 'https://www.youtube.com/results?search_query='+encodeURIComponent((name||'')+' '+(y||'')+' fragman trailer')}
+async function trailerUrl(k){
+  if(TRL[k]!==undefined)return TRL[k]?'https://www.youtube.com/watch?v='+TRL[k]:null;
+  const path='/'+k.replace(':','/')+'/videos';
+  const pick=r=>{const v=(r||[]).filter(x=>x.site==='YouTube');return (v.find(x=>x.type==='Trailer'&&x.official)||v.find(x=>x.type==='Trailer')||v.find(x=>x.type==='Teaser')||v[0]||{}).key||null};
+  let key=null;
+  try{key=pick((await api(path)).results)}catch(e){}
+  if(!key){try{key=pick((await api(path,{language:'en-US'})).results)}catch(e){}}
+  TRL[k]=key;SV('trl',TRL);
+  return key?'https://www.youtube.com/watch?v='+key:null;
+}
+function wireTrailer(a,k,name,y){
+  a.href=ytSearch(name,y);
+  trailerUrl(k).then(u=>{if(u){a.href=u;a.querySelector('.tl').textContent='Fragmanı YouTube\'da izle'}else{a.querySelector('.tl').textContent='YouTube\'da fragman ara'}});
+}
+const TRBTN='<a class="btn" id="shT" target="_blank" rel="noopener" style="text-decoration:none;justify-content:center"><span class="ms">play_circle</span><span class="tl">Fragman aranıyor…</span></a>';
+function quick(k,meta){
+  const tv=k.startsWith('tv:');
+  const o=overlay('<div class="nf"><img alt="" src="'+(meta.p?IMG+'w342'+meta.p:'')+'"><div style="display:flex;flex-direction:column;gap:6px;min-width:0"><span class="lbl">'+(tv?'Dizi':'Film')+(meta.y?' · '+esc(meta.y):'')+'</span><h3>'+esc(meta.n||meta.o)+'</h3>'+(meta.o&&meta.o!==meta.n?'<p class="note">'+esc(meta.o)+'</p>':'')+'</div></div>'+
+    TRBTN+'<button class="btn" id="shI"><span class="imdbtag">IMDb</span>IMDb sayfasını aç</button>');
+  wireTrailer(o.querySelector('#shT'),k,meta.o||meta.n,meta.y);
+  o.querySelector('#shI').onclick=()=>openImdb(k,meta.n);
+}
+
 /* ---------- Toast ---------- */
 let toastT;
 function toast(text,undo){
@@ -664,7 +690,7 @@ function card(t,x){
   c.querySelectorAll('.pad button').forEach(b=>b.onclick=()=>{const j=+b.dataset.s,s=get(k),prev=s.s||0;put(k,{s:s.s===j?0:j},meta);paint();strip();
     if(HIDE||ONLYNEW){setTimeout(()=>{applyVis();},250);toast(meta.n+': '+(get(k).s?ST[get(k).s].l:'işaret kaldırıldı'),()=>{put(k,{s:prev},meta);paint();applyVis()})}});
   c.querySelector('.heart').onclick=e=>{e.stopPropagation();const s=get(k);put(k,{l:!s.l},meta);paint()};
-  const po=c.querySelector('.post');po.style.cursor='pointer';po.title='IMDb\'de aç';po.onclick=()=>openImdb(k,meta.n);
+  const po=c.querySelector('.post');po.style.cursor='pointer';po.title='Fragman ve IMDb';po.onclick=()=>quick(k,meta);
   paint();grid.appendChild(c);
 }
 function applyVis(){
@@ -781,8 +807,9 @@ function sheet(k,after){
   const o=overlay('<div class="nf"><img alt="" src="'+(v.p?IMG+'w342'+v.p:'')+'"><div style="display:flex;flex-direction:column;gap:6px;min-width:0"><span class="lbl">'+(tv?'Dizi':'Film')+(v.y?' · '+esc(v.y):'')+'</span><h3>'+esc(v.n||v.o)+'</h3>'+(v.o&&v.o!==v.n?'<p class="note">'+esc(v.o)+'</p>':'')+(tv&&v.ep?'<p class="note">'+v.ep+' bölüm</p>':'')+'</div></div>'+
     '<div class="pad">'+ORDER.map(s=>'<button data-s="'+s+'" class="'+(v.s===s?'a'+s:'')+'"><span class="ms">'+ST[s].i+'</span>'+ST[s].l+'</button>').join('')+'</div>'+
     (tv&&v.s===2?'<div class="field"><span class="lbl">Kaç bölüm izledin? (yaklaşık)</span><input id="wIn" type="number" min="0" inputmode="numeric" value="'+(v.w||'')+'" style="height:44px;border-radius:12px;background:var(--s3);border:1px solid var(--line);padding:0 12px"></div>':'')+
-    '<button class="btn" id="shI"><span class="imdbtag">IMDb</span>IMDb sayfasını aç</button><div class="row"><button class="btn" id="shL" style="flex:1;'+(v.l?'color:var(--like);border-color:var(--like)':'')+'"><span class="ms'+(v.l?' f':'')+'">favorite</span>'+(v.l?'Beğendim':'Beğen')+'</button><button class="btn" id="shX" style="flex:1"><span class="ms">delete</span>Listeden çıkar</button></div>');
+    TRBTN+'<button class="btn" id="shI"><span class="imdbtag">IMDb</span>IMDb sayfasını aç</button><div class="row"><button class="btn" id="shL" style="flex:1;'+(v.l?'color:var(--like);border-color:var(--like)':'')+'"><span class="ms'+(v.l?' f':'')+'">favorite</span>'+(v.l?'Beğendim':'Beğen')+'</button><button class="btn" id="shX" style="flex:1"><span class="ms">delete</span>Listeden çıkar</button></div>');
   o.querySelectorAll('.pad button').forEach(b=>b.onclick=()=>{put(k,{s:+b.dataset.s});o.remove();re()});
+  wireTrailer(o.querySelector('#shT'),k,v.o||v.n,v.y);
   o.querySelector('#shI').onclick=()=>openImdb(k,v.n||v.o);
   o.querySelector('#shL').onclick=()=>{put(k,{l:!v.l});o.remove();re()};
   o.querySelector('#shX').onclick=()=>{const bak=Object.assign({},DATA[k]);delete DATA[k];SV('marks',DATA);o.remove();re();toast('Listeden çıkarıldı',()=>{DATA[k]=bak;SV('marks',DATA);re()})};
