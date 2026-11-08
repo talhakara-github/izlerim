@@ -7,11 +7,14 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Hesap">
-<title>Hesap</title>
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23000'/%3E%3Ccircle cx='60' cy='60' r='30' fill='%23fff'/%3E%3Ccircle cx='120' cy='60' r='30' fill='%23e2963a'/%3E%3Ccircle cx='60' cy='120' r='30' fill='%23333'/%3E%3Ccircle cx='120' cy='120' r='30' fill='%23e2963a'/%3E%3C/svg%3E">
+<meta name="apple-mobile-web-app-title" content="Hesap Makinesi Gold">
+<meta name="application-name" content="Hesap Makinesi Gold">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Hesap Makinesi Gold</title>
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
 <style>
-:root{--or:#e2963a;--dk:#333335;--g:#9b9b9f;--w:#f2f2f2;--yl:#ffd60a;color-scheme:dark}
+:root{--or:#d9a43f;--dk:#333335;--g:#9b9b9f;--w:#f2f2f2;--yl:#ffd60a;color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 html,body{margin:0;height:100%;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none;touch-action:manipulation}
 button,input,textarea{font:inherit;color:inherit}button{border:0;background:none;cursor:pointer;padding:0}
@@ -36,10 +39,10 @@ button,input,textarea{font:inherit;color:inherit}button{border:0;background:none
 .k:active{filter:brightness(1.35);transform:scale(.96)}
 .k.d{background:var(--dk);color:#fff;font-size:clamp(24px,7.6vw,34px)}
 .k.n{background:#fff;color:#000}
-.k.o{background:var(--or);color:#fff;font-size:clamp(32px,10vw,46px)}
+.k.o{background:linear-gradient(160deg,#ecc06a,#c98f2c);color:#fff;font-size:clamp(32px,10vw,46px)}
 .k.o.on{background:#fff;color:var(--or)}
 .k.z{grid-column:span 2;aspect-ratio:auto;border-radius:999px}
-.k.eq{grid-row:span 2;aspect-ratio:auto;border-radius:999px;background:var(--or);color:#fff;font-size:clamp(36px,11vw,50px)}
+.k.eq{grid-row:span 2;aspect-ratio:auto;border-radius:999px;background:linear-gradient(160deg,#ecc06a,#c98f2c);color:#fff;font-size:clamp(36px,11vw,50px)}
 .k svg{width:38%;height:38%}
 .k.d svg{color:#fff}.k.d.mut svg{color:#8e8e93}
 /* sheets */
@@ -248,17 +251,18 @@ function listView(){
   o.querySelector("#nn").onclick=()=>{o.remove();const p=overlay(`<h3>Sonraki işleme not</h3><p>= tuşuna bastığında bu not o işleme eklenir.</p><input id="pn" value="${esc(pendingNote)}" placeholder="ör. Aralık kirası"><div class="row"><button class="btn" id="x">Temizle</button><button class="btn pri" id="s">Tamam</button></div>`);setTimeout(()=>p.querySelector("#pn").focus(),300);p.querySelector("#s").onclick=()=>{pendingNote=p.querySelector("#pn").value.trim();renderCur();p.remove()};p.querySelector("#x").onclick=()=>{pendingNote="";renderCur();p.remove()}};
 }
 function settings(){
-  const has=!!LSs("gh_token");
-  const o=overlay(`<h3>Senkron</h3><div class="sync" id="sst" data-s="${SYNC.s}"><i></i><span>${esc(SYNC.t)}</span></div><p>Mac ve iPhone arasında senkron, GitHub hesabındaki gizli bir Gist (hesap.json) üzerinden çalışır. İzlerim'de kayıtlı anahtar varsa otomatik kullanılır.</p>${has?"":`<input id="tk" type="password" placeholder="GitHub token (gist yetkili)" autocomplete="off">`}<div class="row">${has?`<button class="btn red" id="out">Anahtarı kaldır</button>`:`<button class="btn pri" id="in">Bağla</button>`}<button class="btn" id="now">Şimdi senkronla</button></div><p>${items().length} işlem · bu cihazda kayıtlı</p>`);
-  if(!has)o.querySelector("#in").onclick=()=>{const v=o.querySelector("#tk").value.trim();if(!v)return;LSs("gh_token",v);o.remove();syncNow()};
+  const has=!!tok();
+  const o=overlay(`<h3>Hesap Makinesi Gold</h3><div class="sync" id="sst" data-s="${SYNC.s}"><i></i><span>${esc(SYNC.t)}</span></div><p>Mac ve iPhone arasında senkron, GitHub hesabındaki gizli bir Gist (hesap.json) üzerinden çalışır. İzlerim'de kayıtlı anahtar varsa otomatik kullanılır.</p>${has?"":`<input id="tk" type="password" placeholder="GitHub token (gist yetkili)" autocomplete="off">`}<div class="row">${has?`<button class="btn red" id="out">Anahtarı kaldır</button>`:`<button class="btn pri" id="in">Bağla</button>`}<button class="btn" id="now">Şimdi senkronla</button></div><p>${items().length} işlem · bu cihazda kayıtlı</p>`);
+  if(!has)o.querySelector("#in").onclick=()=>{const v=o.querySelector("#tk").value.trim();if(!v)return;LS("gh_token",v);o.remove();syncNow()};
   else o.querySelector("#out").onclick=()=>{LSs("gh_token",null);LSs("calc_gist",null);o.remove();setSync("off","Senkron kapalı")};
   o.querySelector("#now").onclick=()=>{o.remove();syncNow()};
 }
 
 /* ===== Gist sync ===== */
 const SYNC={s:"off",t:"Senkron kapalı"};
+function tok(){const v=localStorage.getItem("gh_token");if(!v)return null;try{const p=JSON.parse(v);return typeof p==="string"?p:v}catch(e){return v}}
 function setSync(s,t){SYNC.s=s;SYNC.t=t;const e=$("#sst");if(e){e.dataset.s=s;e.querySelector("span").textContent=t}}
-async function gh(path,opt={}){const r=await fetch("https://api.github.com"+path,{...opt,headers:{"Authorization":"Bearer "+LSs("gh_token"),"Accept":"application/vnd.github+json",...(opt.body?{"Content-Type":"application/json"}:{})},cache:"no-store"});if(!r.ok)throw new Error("GitHub "+r.status);return r.json()}
+async function gh(path,opt={}){const r=await fetch("https://api.github.com"+path,{...opt,headers:{"Authorization":"Bearer "+tok(),"Accept":"application/vnd.github+json",...(opt.body?{"Content-Type":"application/json"}:{})},cache:"no-store"});if(!r.ok)throw new Error("GitHub "+r.status);return r.json()}
 async function gistId(){
   let id=LSs("calc_gist");if(id)return id;
   for(let p=1;p<=5;p++){const L=await gh("/gists?per_page=100&page="+p);const f=L.find(g=>g.files&&g.files["hesap.json"]);if(f){LSs("calc_gist",f.id);return f.id}if(L.length<100)break}
@@ -267,9 +271,9 @@ async function gistId(){
 }
 function merge(a,b){const o={...a};for(const[k,v]of Object.entries(b||{})){if(!o[k]||(v.u||0)>(o[k].u||0))o[k]=v}return o}
 let syncing=false,again=false,qt=null;
-function queueSync(){if(!LSs("gh_token"))return;clearTimeout(qt);qt=setTimeout(syncNow,2000)}
+function queueSync(){if(!tok())return;clearTimeout(qt);qt=setTimeout(syncNow,2000)}
 async function syncNow(){
-  if(!LSs("gh_token")){setSync("off","Senkron kapalı");return}
+  if(!tok()){setSync("off","Senkron kapalı");return}
   if(syncing){again=true;return}syncing=true;setSync("run","Senkronlanıyor…");
   try{
     const id=await gistId();const g=await gh("/gists/"+id);
@@ -280,12 +284,16 @@ async function syncNow(){
     DATA=m;LS("calc_items",DATA);renderTape();
     if(changedRemote)await gh("/gists/"+id,{method:"PATCH",body:JSON.stringify({files:{"hesap.json":{content:JSON.stringify({items:DATA})}}})});
     setSync("ok","Senkron · "+new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"}));
-  }catch(e){setSync("err","Hata: "+e.message);if(/401/.test(e.message))toast("GitHub anahtarı geçersiz")}
+  }catch(e){if(!navigator.onLine){setSync("off","Çevrimdışı · bağlantı gelince senkronlanır")}else setSync("err","Hata: "+e.message);if(/401/.test(e.message))toast("GitHub anahtarı geçersiz")}
   syncing=false;if(again){again=false;syncNow()}
 }
 document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncNow()});
 
 renderTape(true);renderCur();syncNow();
+window.addEventListener("online",()=>syncNow());
+setInterval(()=>{if(navigator.onLine&&SYNC.s!=="ok"&&SYNC.s!=="run")syncNow()},60000);
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
 </html>
