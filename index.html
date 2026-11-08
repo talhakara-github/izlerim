@@ -1138,12 +1138,27 @@ $('#recBtn').onclick=()=>{RECS=null;loadRecs()};
 
 /* ---------- Ayarlar ---------- */
 function dl(name,text,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;document.body.appendChild(a);a.click();a.remove()}
+/* ===== iCloud yedek (paylaş → Dosyalara Kaydet → iCloud Drive) ===== */
+const BK_TOUCH=matchMedia("(pointer:coarse)").matches;
+const bkDate=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+function bkAge(key){let t=0;try{t=+localStorage.getItem(key)||0}catch(e){}return t?Math.floor((Date.now()-t)/864e5):null}
+function bkMark(key){try{localStorage.setItem(key,String(Date.now()))}catch(e){}}
+async function icloudSave(name,text,key){
+  const file=new File([text],name,{type:"application/json"});
+  if(BK_TOUCH&&navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file]});bkMark(key);return "share"}catch(e){if(e&&e.name==="AbortError")return null}
+  }
+  const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();a.remove();bkMark(key);return "download";
+}
+function pickFile(cb){const i=document.createElement("input");i.type="file";i.accept=".json,application/json";i.onchange=()=>{const f=i.files[0];if(f)f.text().then(t=>{try{cb(JSON.parse(t))}catch(e){toast("Dosya okunamadı")}})};i.click()}
+
+setTimeout(()=>{const a=bkAge('bk_izle');if(Object.keys(DATA).length&&(a===null||a>=7))toast(a===null?'Henüz yedek yok · Ayarlar → iCloud\'a yedekle':'Son yedek '+a+' gün önce · Ayarlar → iCloud\'a yedekle')},4000);
 $('#setBtn').onclick=()=>{
   const o=overlay('<h3>Ayarlar</h3>'+
    '<div class="field"><span class="lbl">Sıralama</span><select id="sSort"><option value="vote_count.desc">En bilinen</option><option value="popularity.desc">Şu an popüler</option><option value="vote_average.desc">En yüksek puan</option></select></div>'+
    '<div class="field"><span class="lbl">Liste genişliği</span><select id="sMin"><option value="300">Sadece çok bilinenler</option><option value="50">Geniş liste</option><option value="10">En geniş (niş dahil)</option></select></div>'+
    '<div class="field"><span class="lbl">İsim dili</span><select id="sLang"><option value="tr-TR">Türkçe</option><option value="en-US">Orijinal / İngilizce</option></select></div>'+
-   '<div class="row"><button class="btn" id="sCsv" style="flex:1"><span class="ms">download</span>CSV indir</button><button class="btn" id="sBk" style="flex:1"><span class="ms">save</span>Yedek al</button><button class="btn" id="sRs" style="flex:1"><span class="ms">upload</span>Yedek yükle</button></div>'+
+   '<div class="row"><button class="btn" id="sCsv" style="flex:1"><span class="ms">download</span>CSV indir</button><button class="btn" id="sBk" style="flex:1"><span class="ms">save</span>iCloud yedeği</button><button class="btn" id="sRs" style="flex:1"><span class="ms">upload</span>Yedek yükle</button></div>'+
    '<input type="file" id="sFile" accept=".json" class="hide">'+
    '<button class="btn" id="sSeed"><span class="ms">history</span>Geçmişi yeniden yükle</button><button class="btn" id="sSync"><span class="ms">cloud_sync</span>Cihazlar arası senkron <i id="syncDot2"></i></button><button class="btn" id="sKey"><span class="ms">key</span>TMDB anahtarını değiştir</button>'+
    '<p class="note">Senkron açıksa işaretlerin tüm cihazlarında aynı kalır; kapalıysa yalnız bu tarayıcıda saklanır.</p>');
@@ -1157,7 +1172,7 @@ $('#setBtn').onclick=()=>{
     Object.entries(DATA).forEach(([k,v])=>{const [t,id]=k.split(':');rows.push([t==='tv'?'dizi':'film',v.n||'',v.o||'',v.y||'',L[v.s]||'',v.l?'evet':'',t==='tv'?(v.ep??''):'',v.s===1&&t==='tv'?(v.ep??''):(v.w??''),id])});
     dl('izleme-listem.csv','﻿'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n'),'text/csv');
   };
-  o.querySelector('#sBk').onclick=()=>dl('izlerim-yedek.json',JSON.stringify(DATA),'application/json');
+  o.querySelector('#sBk').onclick=async()=>{const r=await icloudSave('izle-yedek-'+bkDate()+'.json',JSON.stringify(DATA),'bk_izle');if(r)toast(r==='share'?'“Dosyalara Kaydet” → iCloud Drive seç':'Yedek indirildi');};
   o.querySelector('#sRs').onclick=()=>o.querySelector('#sFile').click();
   o.querySelector('#sFile').onchange=e=>{const f=e.target.files[0];if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);Object.entries(d).forEach(([k,v])=>{if(v&&typeof v==='object'){DATA[k]=Object.assign(DATA[k]||{},v)}});SV('marks',DATA);o.remove();toast('Yedek yüklendi');go(VIEW);reset()}catch(err){toast('Dosya okunamadı')}})};
   o.querySelector('#sKey').onclick=()=>{o.remove();showKey()};

@@ -203,6 +203,7 @@ function renderHome(){
   $("#app").innerHTML=`<div class="view">
   <div class="top">${stateHtml()}<button class="act" id="setBtn">Ayarlar</button></div>
   <h1>Not Defteri</h1>
+  ${(()=>{const a=bkAge("bk_notlar");return NOTES.length&&(a===null||a>=7)?`<button class="group" id="bkNag" style="display:flex;align-items:center;gap:12px;padding:12px 16px;margin-bottom:16px;width:100%;text-align:left"><div class="lic" style="background:#007aff;color:#fff">☁️</div><span style="flex:1;font-size:15px">${a===null?"Notlarının iCloud yedeği yok":"Son iCloud yedeği "+a+" gün önce"}<br><span style="color:var(--blue)">Şimdi yedekle</span></span>${CHEV}</button>`:""})()}
   <label class="search">${SEARCH}<input id="q" type="search" placeholder="Ara" value="${esc(Q)}"></label>
   ${Q?searchResults():`
   <div class="smart">${card("today",I.today,"#007aff",today,"Bugün")}${card("all",I.all,"#636366",open.length,"Tümü")}</div>
@@ -259,6 +260,7 @@ document.addEventListener("click",e=>{
   if(t.closest("#back")){VIEW={v:"home"};render();return}
   if(t.closest("#addList"))return listSheet();
   if(t.closest("#setBtn"))return settings();
+  if(t.closest("#bkNag")){icloudSave("notlar-yedek-"+bkDate()+".json",JSON.stringify({app:"notlar",v:1,at:Date.now(),store:STORE}),"bk_notlar").then(r=>{if(r){toast(r==="share"?"Yedek hazır":"Yedek indirildi");render()}});return}
   if(t.closest("#editList"))return listSheet(catOf(VIEW.id));
   if(t.closest("#showDone")){SHOWDONE=!SHOWDONE;render();return}
   if(t.closest("#togAll")){if(CATS.every(c=>COLL.has(c.id)))COLL.clear();else CATS.forEach(c=>COLL.add(c.id));saveUI();render();return}
@@ -393,6 +395,20 @@ async function claudeJSON(prompt){
   return JSON.parse(m?m[0]:t);
 }
 
+/* ===== iCloud yedek (paylaş → Dosyalara Kaydet → iCloud Drive) ===== */
+const BK_TOUCH=matchMedia("(pointer:coarse)").matches;
+const bkDate=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+function bkAge(key){let t=0;try{t=+localStorage.getItem(key)||0}catch(e){}return t?Math.floor((Date.now()-t)/864e5):null}
+function bkMark(key){try{localStorage.setItem(key,String(Date.now()))}catch(e){}}
+async function icloudSave(name,text,key){
+  const file=new File([text],name,{type:"application/json"});
+  if(BK_TOUCH&&navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file]});bkMark(key);return "share"}catch(e){if(e&&e.name==="AbortError")return null}
+  }
+  const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();a.remove();bkMark(key);return "download";
+}
+function pickFile(cb){const i=document.createElement("input");i.type="file";i.accept=".json,application/json";i.onchange=()=>{const f=i.files[0];if(f)f.text().then(t=>{try{cb(JSON.parse(t))}catch(e){toast("Dosya okunamadı")}})};i.click()}
+
 /* ----- Ayarlar ----- */
 function settings(){
   const model=LSj("anth_model")||"claude-haiku-5-5";
@@ -403,7 +419,12 @@ function settings(){
   <div class="lab">Senkron (GitHub Gist)</div>
   <div class="fg"><input id="gt" type="password" autocomplete="off" placeholder="github_pat_…" value="${esc(tok()||"")}"></div>
   <p style="font-size:13px;color:var(--tx2);margin:-14px 16px 22px">İzle ve Hesap'ta kullandığın anahtarın aynısı. Notlar Mac ve iPhone arasında bununla senkronlanır, İzle'ye ekleme de bununla çalışır.</p>
-  <button class="danger" id="now" style="color:var(--blue)">Şimdi senkronla</button>`);
+  <button class="danger" id="now" style="color:var(--blue);margin-bottom:22px">Şimdi senkronla</button>
+  <div class="lab">Yedek (iCloud)</div>
+  <div class="fg"><button class="row" id="bkSave" style="color:var(--blue)">iCloud'a yedekle</button><button class="row" id="bkLoad" style="color:var(--blue)">Yedekten geri yükle</button></div>
+  <p style="font-size:13px;color:var(--tx2);margin:-14px 16px 22px">${bkAge("bk_notlar")===null?"Henüz yedek alınmadı.":"Son yedek: "+(bkAge("bk_notlar")===0?"bugün":bkAge("bk_notlar")+" gün önce")+"."} Paylaş menüsünde “Dosyalara Kaydet” → iCloud Drive seç. Geri yükleme mevcut notları silmez, birleştirir.</p>`);
+  o.querySelector("#bkSave").onclick=async()=>{const r=await icloudSave("notlar-yedek-"+bkDate()+".json",JSON.stringify({app:"notlar",v:1,at:Date.now(),store:STORE}),"bk_notlar");if(r){o.remove();toast(r==="share"?"Yedek hazır":"Yedek indirildi");render()}};
+  o.querySelector("#bkLoad").onclick=()=>pickFile(d=>{const st=d&&d.app==="notlar"?d.store:(d&&d.notes?d:null);if(!st||!st.notes)return toast("Bu bir Not Defteri yedeği değil");const before=NOTES.length;STORE=mergeStore(STORE,{...st,notes:Object.fromEntries(Object.entries(st.notes).map(([k,v])=>[k,{...v,u:Math.max(v.u||0,(STORE.notes[k]&&STORE.notes[k].u)||0)+(STORE.notes[k]?0:1)}]))});persist();fromStore();render();o.remove();toast((NOTES.length-before)+" not geri geldi")});
   o.querySelector("#x").onclick=()=>o.remove();
   o.querySelector("#now").onclick=()=>{o.remove();syncNow()};
   o.querySelector("#s").onclick=()=>{

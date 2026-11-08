@@ -16,9 +16,9 @@
 <style>
 :root{--or:#d9a43f;--dk:#333335;--g:#9b9b9f;--w:#f2f2f2;--yl:#ffd60a;color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
-html,body{margin:0;height:100%;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none;touch-action:manipulation}
+html,body{margin:0;height:100%;overflow:hidden;position:fixed;inset:0;width:100%;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none;touch-action:manipulation}
 button,input,textarea{font:inherit;color:inherit}button{border:0;background:none;cursor:pointer;padding:0}
-.app{height:100dvh;max-width:460px;margin:0 auto;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 0 calc(10px + env(safe-area-inset-bottom))}
+.app{height:100%;max-width:460px;margin:0 auto;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 0 calc(10px + env(safe-area-inset-bottom))}
 /* tape */
 .tape{flex:1;overflow-y:auto;padding:12px 14px 4px;display:flex;flex-direction:column;font-variant-numeric:tabular-nums;scrollbar-width:none;mask-image:linear-gradient(to bottom,transparent,#000 40px)}
 .tape::-webkit-scrollbar{display:none}
@@ -260,6 +260,7 @@ function renderTape(scroll){
   L.forEach(x=>{const dk=dayKey(x.at);if(dk!==last){if(last!==""||dk!==today)h+=`<div class="day">${dk===today?"Bugün":dayLbl(x.at)}</div>`;last=dk}
     h+=`<div class="ln" data-id="${x.id}"><span class="e">${esc(x.expr)}=</span><span class="r">${esc(fmtNum(x.result))}</span>${x.note?`<span class="n">${esc(x.note)}</span>`:""}</div>`});
   if(!L.length)h+='<div class="hint">Hesapların burada tarih sırasıyla birikir. Satıra dokunarak not ekleyebilirsin.</div>';
+  {const a=bkAge("bk_hesap");if(L.length>=5&&(a===null||a>=7))h+='<button class="hint btn-sync" id="hb">'+(a===null?"Geçmişin iCloud yedeği yok":"Son iCloud yedeği "+a+" gün önce")+' → Yedekle</button>';}
   if(!tok())h+='<button class="hint btn-sync" id="hs">Senkronu bağla → Mac ve iPhone geçmişi birleşsin</button>';
   const tp=$("#tape");const atBottom=tp.scrollHeight-tp.scrollTop-tp.clientHeight<60;
   tp.innerHTML=h;if(scroll||atBottom)tp.scrollTop=tp.scrollHeight;
@@ -274,7 +275,7 @@ function renderCur(){
   $("[data-k=AC]").textContent=ex?"C":"AC";
   fit();
 }
-$("#tape").addEventListener("click",e=>{if(e.target.closest("#hs"))return settings();const l=e.target.closest(".ln");if(l)itemSheet(l.dataset.id)});
+$("#tape").addEventListener("click",e=>{if(e.target.closest("#hs"))return settings();if(e.target.closest("#hb"))return icloudSave("hesap-yedek-"+bkDate()+".json",JSON.stringify({app:"hesap",v:1,at:Date.now(),items:DATA}),"bk_hesap").then(r=>{if(r)renderTape()});const l=e.target.closest(".ln");if(l)itemSheet(l.dataset.id)});
 window.addEventListener("resize",fit);
 /* ===== tam ekran geçmiş: tutma çubuğunu aşağı çek ya da dokun ===== */
 (()=>{const app=document.querySelector(".app"),grip=$("#grip");let y0=null,dy=0;
@@ -295,6 +296,20 @@ window.addEventListener("resize",fit);
  m.addEventListener("touchmove",e=>{if(x0!==null&&Math.abs(e.touches[0].clientX-x0)>40){clearTimeout(lp);lp=null;press("bs");x0=e.touches[0].clientX}},{passive:true});
  m.addEventListener("touchend",()=>{clearTimeout(lp);x0=null});})();
 
+/* ===== iCloud yedek (paylaş → Dosyalara Kaydet → iCloud Drive) ===== */
+const BK_TOUCH=matchMedia("(pointer:coarse)").matches;
+const bkDate=()=>{const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
+function bkAge(key){let t=0;try{t=+localStorage.getItem(key)||0}catch(e){}return t?Math.floor((Date.now()-t)/864e5):null}
+function bkMark(key){try{localStorage.setItem(key,String(Date.now()))}catch(e){}}
+async function icloudSave(name,text,key){
+  const file=new File([text],name,{type:"application/json"});
+  if(BK_TOUCH&&navigator.canShare&&navigator.canShare({files:[file]})){
+    try{await navigator.share({files:[file]});bkMark(key);return "share"}catch(e){if(e&&e.name==="AbortError")return null}
+  }
+  const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();a.remove();bkMark(key);return "download";
+}
+function pickFile(cb){const i=document.createElement("input");i.type="file";i.accept=".json,application/json";i.onchange=()=>{const f=i.files[0];if(f)f.text().then(t=>{try{cb(JSON.parse(t))}catch(e){toast("Dosya okunamadı")}})};i.click()}
+
 /* ===== sheets ===== */
 function overlay(html){const o=document.createElement("div");o.className="ov";o.innerHTML=`<div class="sheet"><div class="grabber"></div>${html}</div>`;o.addEventListener("click",e=>{if(e.target===o)o.remove()});document.body.appendChild(o);return o}
 function itemSheet(id){
@@ -312,7 +327,7 @@ function clearAll(){
   o.querySelector("#ok").onclick=()=>{const t=Date.now();Object.values(DATA).forEach(v=>{if(!v.del){v.del=true;v.u=t}});save();renderTape();o.remove()};
 }
 function listView(){
-  const o=overlay(`<h3>Geçmiş ve notlar</h3><button class="sync" id="sst" data-s="${SYNC.s}" style="align-self:center"><i></i><span>${esc(SYNC.t)}</span></button><input id="lq" type="search" placeholder="İşlem, sonuç veya notta ara"><div class="row"><button class="btn" id="nn">${pendingNote?"Not: "+esc(pendingNote.slice(0,16)):"Sonraki işleme not"}</button><button class="btn" id="st">Senkron</button></div><div id="lw"></div><button class="btn red" id="clr">Geçmişi temizle</button>`);
+  const o=overlay(`<h3>Geçmiş ve notlar</h3><button class="sync" id="sst" data-s="${SYNC.s}" style="align-self:center"><i></i><span>${esc(SYNC.t)}</span></button><input id="lq" type="search" placeholder="İşlem, sonuç veya notta ara"><div class="row"><button class="btn" id="nn">${pendingNote?"Not: "+esc(pendingNote.slice(0,16)):"Sonraki işleme not"}</button><button class="btn" id="st">Senkron</button></div><div id="lw"></div><div class="row"><button class="btn" id="bks">iCloud'a yedekle</button><button class="btn" id="bkl">Yedekten yükle</button></div><p>${bkAge("bk_hesap")===null?"Henüz yedek yok.":"Son yedek: "+(bkAge("bk_hesap")===0?"bugün":bkAge("bk_hesap")+" gün önce")} · “Dosyalara Kaydet” → iCloud Drive</p><button class="btn red" id="clr">Geçmişi temizle</button>`);
   const draw=()=>{const q=o.querySelector("#lq").value.toLocaleLowerCase("tr");const L=items().reverse().filter(x=>!q||(x.expr+" "+fmtNum(x.result)+" "+(x.note||"")).toLocaleLowerCase("tr").includes(q));
     let h="",last="";L.forEach(x=>{const dk=dayLbl(x.at);if(dk!==last){if(last)h+="</div>";h+=`<div class="hd">${dk}</div><div class="hl">`;last=dk}
       h+=`<div class="hi" data-id="${x.id}"><div class="e">${esc(x.expr)} =</div><div class="r">${esc(fmtNum(x.result))}</div><div class="t">${new Date(x.at).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})}</div><div></div>${x.note?`<div class="nn">${esc(x.note)}</div>`:""}</div>`});
@@ -320,6 +335,8 @@ function listView(){
   draw();o.querySelector("#lq").oninput=draw;
   o.querySelector("#st").onclick=o.querySelector("#sst").onclick=()=>{o.remove();settings()};
   o.querySelector("#clr").onclick=()=>{o.remove();clearAll()};
+  o.querySelector("#bks").onclick=async()=>{const r=await icloudSave("hesap-yedek-"+bkDate()+".json",JSON.stringify({app:"hesap",v:1,at:Date.now(),items:DATA}),"bk_hesap");if(r){o.remove();toast(r==="share"?"Yedek hazır":"Yedek indirildi");renderTape()}};
+  o.querySelector("#bkl").onclick=()=>pickFile(d=>{const it=d&&d.app==="hesap"?d.items:(d&&d.items?d.items:null);if(!it)return toast("Bu bir Hesap yedeği değil");const n0=items().length;for(const[k,v]of Object.entries(it)){if(!DATA[k])DATA[k]=v}save();renderTape(true);o.remove();toast((items().length-n0)+" işlem geri geldi")});
   o.querySelector("#lw").onclick=e=>{const i=e.target.closest(".hi");if(i){o.remove();itemSheet(i.dataset.id)}};
   o.querySelector("#nn").onclick=()=>{o.remove();const p=overlay(`<h3>Sonraki işleme not</h3><p>= tuşuna bastığında bu not o işleme eklenir.</p><input id="pn" value="${esc(pendingNote)}" placeholder="ör. Aralık kirası"><div class="row"><button class="btn" id="x">Temizle</button><button class="btn pri" id="s">Tamam</button></div>`);setTimeout(()=>p.querySelector("#pn").focus(),300);p.querySelector("#s").onclick=()=>{pendingNote=p.querySelector("#pn").value.trim();renderCur();p.remove()};p.querySelector("#x").onclick=()=>{pendingNote="";renderCur();p.remove()}};
 }
