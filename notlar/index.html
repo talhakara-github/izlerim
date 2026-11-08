@@ -356,7 +356,7 @@ async function syncNow(){
     if(J(m)!==J(STORE)){STORE=m;LSj("nt_store",STORE);fromStore();if(!document.activeElement||!document.activeElement.matches("[data-add],#q,#inp"))render()}
     if(J(m)!==J(remote))await gh("/gists/"+id,{method:"PATCH",body:J({files:{"notlar.json":{content:J(m)}}})});
     setState("ok","Senkron");
-  }catch(e){setState("err",/401/.test(e.message)?"GitHub anahtarı geçersiz":"Senkron hatası")}
+  }catch(e){setState("err",/401/.test(e.message)?"GitHub anahtarı geçersiz":/403|404/.test(e.message)?"Anahtarın Gist izni yok (Gists: Read and write)":"Senkron hatası: "+e.message)}
   syncing=false;if(again){again=false;syncNow()}
 }
 
@@ -419,14 +419,17 @@ function settings(){
   <div class="lab">Senkron (GitHub Gist)</div>
   <div class="fg"><input id="gt" type="password" autocomplete="off" placeholder="github_pat_…" value="${esc(tok()||"")}"></div>
   <p style="font-size:13px;color:var(--tx2);margin:-14px 16px 22px">İzle ve Hesap'ta kullandığın anahtarın aynısı. Notlar Mac ve iPhone arasında bununla senkronlanır, İzle'ye ekleme de bununla çalışır.</p>
-  <button class="danger" id="now" style="color:var(--blue);margin-bottom:22px">Şimdi senkronla</button>
+  <button class="danger" id="now" style="color:var(--blue);margin-bottom:8px">Kaydet ve senkronla</button>
+  <p id="syncMsg" style="font-size:13px;color:var(--tx2);margin:0 16px 22px;min-height:18px">${tok()?"Durum: "+esc(STATE.t):"GitHub anahtarı girilmedi."}</p>
   <div class="lab">Yedek (iCloud)</div>
   <div class="fg"><button class="row" id="bkSave" style="color:var(--blue)">iCloud'a yedekle</button><button class="row" id="bkLoad" style="color:var(--blue)">Yedekten geri yükle</button></div>
   <p style="font-size:13px;color:var(--tx2);margin:-14px 16px 22px">${bkAge("bk_notlar")===null?"Henüz yedek alınmadı.":"Son yedek: "+(bkAge("bk_notlar")===0?"bugün":bkAge("bk_notlar")+" gün önce")+"."} Paylaş menüsünde “Dosyalara Kaydet” → iCloud Drive seç. Geri yükleme mevcut notları silmez, birleştirir.</p>`);
   o.querySelector("#bkSave").onclick=async()=>{const r=await icloudSave("notlar-yedek-"+bkDate()+".json",JSON.stringify({app:"notlar",v:1,at:Date.now(),store:STORE}),"bk_notlar");if(r){o.remove();toast(r==="share"?"Yedek hazır":"Yedek indirildi");render()}};
   o.querySelector("#bkLoad").onclick=()=>pickFile(d=>{const st=d&&d.app==="notlar"?d.store:(d&&d.notes?d:null);if(!st||!st.notes)return toast("Bu bir Not Defteri yedeği değil");const before=NOTES.length;STORE=mergeStore(STORE,{...st,notes:Object.fromEntries(Object.entries(st.notes).map(([k,v])=>[k,{...v,u:Math.max(v.u||0,(STORE.notes[k]&&STORE.notes[k].u)||0)+(STORE.notes[k]?0:1)}]))});persist();fromStore();render();o.remove();toast((NOTES.length-before)+" not geri geldi")});
   o.querySelector("#x").onclick=()=>o.remove();
-  o.querySelector("#now").onclick=()=>{o.remove();syncNow()};
+  const saveFields=()=>{const ak=o.querySelector("#ak").value.trim(),gt=o.querySelector("#gt").value.trim();LSj("anth_key",ak||null);LSj("anth_model",o.querySelector("#am").value);if(gt!==(tok()||"")){LSj("gh_token",gt||null);LSj("nt_gist",null);LSj("izle_gist",null)}};
+  ["#ak","#gt","#am"].forEach(q=>o.querySelector(q).addEventListener("change",saveFields));
+  o.querySelector("#now").onclick=async()=>{saveFields();const m=o.querySelector("#syncMsg");if(!tok()){m.textContent="Önce GitHub anahtarını yapıştır.";return}m.textContent="Senkronlanıyor…";await syncNow();for(let i=0;i<40&&STATE.s==="run";i++)await new Promise(r=>setTimeout(r,250));m.textContent=STATE.s==="ok"?"✓ Senkron tamam · "+NOTES.length+" not":"⚠️ "+STATE.t;};
   o.querySelector("#s").onclick=()=>{
     const ak=o.querySelector("#ak").value.trim(),gt=o.querySelector("#gt").value.trim();
     LSj("anth_key",ak||null);LSj("anth_model",o.querySelector("#am").value);
