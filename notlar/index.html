@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Not Defteri</title>
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Notlar">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--bg:#000;--card:#1c1c1e;--card2:#2c2c2e;--fill:rgba(118,118,128,.24);--sep:rgba(84,84,88,.6);--tx:#fff;--tx2:rgba(235,235,245,.6);--tx3:rgba(235,235,245,.3);--blue:#0a84ff;--red:#ff453a;--ease:cubic-bezier(.32,.72,0,1);--mat:rgba(22,22,24,.82);color-scheme:dark}
+@media(prefers-color-scheme:light){:root{--bg:#f2f2f7;--card:#fff;--card2:#e5e5ea;--fill:rgba(118,118,128,.12);--sep:rgba(60,60,67,.29);--tx:#000;--tx2:rgba(60,60,67,.6);--tx3:rgba(60,60,67,.3);--blue:#007aff;--red:#ff3b30;--mat:rgba(249,249,249,.86);color-scheme:light}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font:17px/1.29 -apple-system,BlinkMacSystemFont,"SF Pro Text","Helvetica Neue",system-ui,sans-serif;letter-spacing:-.41px;-webkit-font-smoothing:antialiased}
+button,input,textarea,select{font:inherit;color:inherit;letter-spacing:inherit}
+button{border:0;background:none;cursor:pointer;padding:0}
+a{color:var(--blue);text-decoration:none}
+.app{max-width:720px;margin:0 auto;padding:calc(8px + env(safe-area-inset-top)) 16px calc(150px + env(safe-area-inset-bottom))}
+.view{animation:vin .35s var(--ease)}
+@keyframes vin{from{opacity:0;transform:translateX(16px)}}
+.top{display:flex;align-items:center;justify-content:space-between;min-height:44px}
+.top .back{color:var(--blue);display:flex;align-items:center;gap:2px;font-size:17px;min-height:44px}
+.top .back svg{width:12px;height:20px}
+.top .act{color:var(--blue);min-height:44px;font-size:17px;padding:0 4px}
+.state{font-size:13px;color:var(--tx2);display:flex;align-items:center;gap:6px}
+.state i{width:7px;height:7px;border-radius:50%;background:var(--tx3)}.state[data-s=ok] i{background:#30d158}.state[data-s=err] i{background:var(--red)}
+h1{margin:2px 0 10px;font-size:34px;font-weight:700;letter-spacing:.37px;line-height:41px}
+h2{margin:26px 0 8px;font-size:22px;font-weight:700;letter-spacing:.35px}
+.search{position:relative;margin-bottom:16px;display:block}
+.search input{width:100%;height:36px;border:0;outline:none;border-radius:10px;background:var(--fill);padding:0 12px 0 34px;font-size:17px}
+.search input::placeholder{color:var(--tx2)}
+.search svg{position:absolute;left:9px;top:9px;width:18px;height:18px;color:var(--tx2)}
+/* smart cards */
+.smart{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sc{background:var(--card);border-radius:12px;padding:10px 12px 10px;display:grid;grid-template-columns:1fr auto;align-items:start;text-align:left;min-height:86px;transition:transform .15s}
+.sc:active{transform:scale(.97)}
+.sc .ic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;color:#fff}
+.sc .ic svg{width:18px;height:18px}
+.sc b{font-size:28px;font-weight:700;line-height:32px;letter-spacing:.36px}
+.sc span{grid-column:1/-1;align-self:end;margin-top:10px;font-size:15px;font-weight:600;color:var(--tx2);letter-spacing:-.24px}
+/* grouped list */
+.group{background:var(--card);border-radius:12px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;min-height:52px;padding:0 16px 0 12px;position:relative;width:100%;text-align:left;transition:background .15s}
+.row:active{background:var(--card2)}
+.row+.row::before{content:"";position:absolute;top:0;left:56px;right:0;border-top:.5px solid var(--sep)}
+.lic{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:16px;flex:none}
+.row .nm{flex:1;font-size:17px}
+.row .ct{color:var(--tx2);font-size:17px}
+.chev{width:8px;height:14px;color:var(--tx3);flex:none}
+/* list view */
+.ltitle{font-size:34px;font-weight:700;letter-spacing:.37px;margin:2px 0 6px;display:flex;align-items:center;gap:10px}
+.ltitle .cnt{margin-left:auto;font-size:34px}
+.sec{margin-top:18px}
+.sech{display:flex;align-items:center;gap:8px;min-height:44px;font-size:20px;font-weight:700;letter-spacing:.38px;width:100%;text-align:left}
+.sech svg{width:14px;height:14px;transition:transform .3s var(--ease);flex:none}
+.sec.closed .sech svg{transform:rotate(-90deg)}
+.sech em{font-style:normal;margin-left:auto;font-size:17px;font-weight:400;color:var(--tx2)}
+.body{display:grid;grid-template-rows:1fr;transition:grid-template-rows .32s var(--ease)}
+.body>div{overflow:hidden;min-height:0}
+.sec.closed .body{grid-template-rows:0fr}
+.it{display:flex;gap:12px;align-items:flex-start;padding:11px 0 11px 2px;position:relative;min-height:44px}
+.it+.it::before,.addrow::before{content:"";position:absolute;top:0;left:38px;right:0;border-top:.5px solid var(--sep)}
+.ck{width:24px;height:24px;border-radius:50%;border:1.6px solid var(--tx3);flex:none;margin-top:-1px;display:grid;place-items:center;transition:background .2s,border-color .2s}
+.ck::after{content:"";width:14px;height:14px;border-radius:50%;background:transparent;transition:background .2s}
+.it.done .ck{border-color:var(--c)}.it.done .ck::after{background:var(--c)}
+.it .tx{flex:1;min-width:0;cursor:pointer}
+.it .t{font-size:17px;word-break:break-word}
+.it.done .t{color:var(--tx2)}
+.it .d{font-size:15px;color:var(--tx2);margin-top:2px;white-space:pre-wrap;word-break:break-word}
+.it .u{font-size:15px;margin-top:2px;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.it .badge{font-size:13px;color:var(--tx2);margin-top:3px}
+.addrow{display:flex;gap:12px;align-items:center;min-height:44px;position:relative;padding-left:2px}
+.addrow .plus{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:none;color:#fff;font-size:18px;line-height:1}
+.addrow input{flex:1;border:0;outline:none;background:transparent;font-size:17px;min-height:44px}
+.empty{color:var(--tx2);text-align:center;padding:40px 10px;font-size:17px}
+.showdone{color:var(--blue);font-size:15px;min-height:44px}
+/* bottom bar: Claude */
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--mat);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-top:.5px solid var(--sep);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}
+.dock .in{max-width:720px;margin:0 auto}
+.reply{background:var(--card);border-radius:14px;padding:10px 12px;margin-bottom:8px;font-size:15px;line-height:1.35;position:relative;box-shadow:0 2px 12px rgba(0,0,0,.15);animation:vin .3s var(--ease)}
+.reply .who{font-size:13px;font-weight:600;color:var(--tx2);margin-bottom:2px;display:flex;justify-content:space-between}
+.reply .who button{color:var(--tx2);font-size:15px;min-width:28px;min-height:22px}
+.reply .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.reply .tags span{font-size:13px;background:var(--fill);padding:2px 8px;border-radius:999px;color:var(--tx2)}
+.reply .acts{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 14px;border-radius:999px;background:var(--blue);color:#fff;font-size:15px;font-weight:600}
+.pill.sec2{background:var(--fill);color:var(--blue)}
+.cmp{display:flex;gap:8px;align-items:flex-end}
+.cmp textarea{flex:1;resize:none;border:0;outline:none;background:var(--fill);border-radius:18px;padding:8px 14px;min-height:36px;max-height:140px;font-size:17px;line-height:1.3}
+.cmp textarea::placeholder{color:var(--tx2)}
+.ib{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;flex:none}
+.ib.send{background:var(--blue)}.ib.send:disabled{opacity:.35}
+.ib.hist{color:var(--blue)}
+.ib svg{width:18px;height:18px}
+.thinking{color:var(--tx2);font-size:15px;padding:2px 4px 8px}
+/* sheets */
+.ov{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center;animation:fd .2s}
+@keyframes fd{from{opacity:0}}
+.sheet{width:100%;max-width:560px;max-height:92dvh;overflow:auto;background:var(--bg);border-radius:12px 12px 0 0;padding:6px 16px calc(20px + env(safe-area-inset-bottom));animation:up .4s var(--ease)}
+@media(min-width:720px){.ov{align-items:center}.sheet{border-radius:14px}}
+@keyframes up{from{transform:translateY(100%)}}
+.grab{width:36px;height:5px;border-radius:3px;background:var(--tx3);margin:0 auto 6px}
+.shh{display:flex;align-items:center;justify-content:space-between;min-height:44px;margin-bottom:8px}
+.shh b{font-size:17px;font-weight:600}
+.shh button{color:var(--blue);font-size:17px;min-height:44px}
+.shh .done{font-weight:600}
+.fg{background:var(--card);border-radius:10px;overflow:hidden;margin-bottom:22px}
+.fg input,.fg textarea,.fg select{display:block;width:100%;border:0;outline:none;background:transparent;padding:11px 16px;font-size:17px;min-height:44px}
+.fg textarea{min-height:88px;resize:none}
+.fg>*+*{border-top:.5px solid var(--sep)}
+.lab{font-size:13px;color:var(--tx2);text-transform:uppercase;margin:0 16px 6px;letter-spacing:-.08px}
+.danger{width:100%;min-height:44px;background:var(--card);border-radius:10px;color:var(--red);font-size:17px}
+.colors{display:flex;flex-wrap:wrap;gap:12px;padding:14px 16px}
+.colors button{width:36px;height:36px;border-radius:50%;box-shadow:0 0 0 0 var(--tx3)}
+.colors button.on{box-shadow:0 0 0 3px var(--bg),0 0 0 5px var(--tx3)}
+.emojis{display:flex;flex-wrap:wrap;gap:6px;padding:12px 12px}
+.emojis button{width:44px;height:44px;border-radius:50%;font-size:22px;background:var(--fill)}
+.emojis button.on{box-shadow:inset 0 0 0 2px var(--blue)}
+.msg{max-width:85%;padding:8px 12px;border-radius:18px;margin:4px 0;white-space:pre-wrap;word-wrap:break-word}
+.msg.u{margin-left:auto;background:var(--blue);color:#fff;border-bottom-right-radius:6px}
+.msg.a{background:var(--card);border-bottom-left-radius:6px}
+.toast{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translateX(-50%);z-index:60;background:var(--card);color:var(--tx);padding:10px 16px;border-radius:14px;font-size:15px;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,.25);animation:vin .3s var(--ease)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="dock"><div class="in">
+  <div id="replyBox"></div>
+  <form class="cmp" id="form">
+    <button type="button" class="ib hist" id="histBtn" aria-label="Sohbet geçmişi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/></svg></button>
+    <textarea id="inp" rows="1" placeholder="Claude'a yaz…" autocapitalize="sentences"></textarea>
+    <button class="ib send" id="send" type="submit" aria-label="Gönder" disabled><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+  </form>
+</div></div>
+<script>
+const IZLE_URL="../";
+const TMDB_KEY="eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiJmNTE2YjdkMmIyNTNjMTdiNGQzM2VkNzMzZmM4ZWM3YiIsIm5iZiI6MTc5MTEzMDgxNS45MDcsInN1YiI6IjZhYzI3Y2JmZmVlMmRhMTJjN2ZmM2Y3NyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.591KiJjC-kzQtfOSUUHZKBD15za92lZq2FPJ98gXgmM";
+const PALETTE=["#ff3b30","#ff9500","#ffcc00","#34c759","#5ac8fa","#007aff","#5856d6","#af52de","#ff2d55","#a2845e","#8e8e93"];
+const EMOJIS=["🧯","💳","🛠️","📺","🎬","🛍️","💼","🗂️","🏠","✈️","🍽️","💪","📚","🐱","🚗","💡","🎁","🩺","🎵","📌"];
+const DEFCOL={afet:"#ff3b30",para:"#34c759",yazilim:"#007aff",diziler:"#af52de",filmler:"#ff9500",alisveris:"#ff2d55",is:"#a2845e",diger:"#8e8e93"};
+const DEFAULT_CATS=[{id:"afet",name:"Afet / Acil Durum",emoji:"🧯"},{id:"para",name:"Para / Bankacılık",emoji:"💳"},{id:"yazilim",name:"Yazılım / Araçlar",emoji:"🛠️"},{id:"diziler",name:"Diziler",emoji:"📺"},{id:"filmler",name:"Filmler",emoji:"🎬"},{id:"alisveris",name:"Alışveriş / Ürünler",emoji:"🛍️"},{id:"is",name:"İş / Prelogos",emoji:"💼"},{id:"diger",name:"Diğer",emoji:"🗂️"}];
+let CATS=DEFAULT_CATS.slice(),NOTES=[],CHAT=[],COLL=new Set(),VIEW={v:"home"},Q="",SHOWDONE=false,busy=false,LAST=null;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const linkify=s=>esc(s).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+const slug=s=>(s||"").toLocaleLowerCase("tr").replace(/ğ/g,"g").replace(/ü/g,"u").replace(/ş/g,"s").replace(/ı/g,"i").replace(/ö/g,"o").replace(/ç/g,"c").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"").slice(0,40)||"liste";
+const colOf=c=>c.color||DEFCOL[c.id]||PALETTE[[...c.id].reduce((a,ch)=>a+ch.charCodeAt(0),0)%PALETTE.length];
+const catOf=id=>CATS.find(c=>c.id===id)||{id,name:"Kategorisiz",emoji:"❔",color:"#8e8e93"};
+function toast(t){document.querySelector(".toast")?.remove();const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)}
+const CHEV='<svg class="chev" viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m1 1 6 6-6 6"/></svg>';
+const DOWN='<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m3 5 4 4 4-4"/></svg>';
+const SEARCH='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+const isToday=t=>{const d=new Date(t),n=new Date();return d.toDateString()===n.toDateString()};
+try{COLL=new Set(JSON.parse(localStorage.getItem("nd_coll")||"[]"))}catch(e){}
+
+/* ================= views ================= */
+function render(){
+  if(VIEW.v==="home")return renderHome();
+  renderList();
+}
+function stateHtml(){return `<div class="state" id="state" data-s="${STATE.s}"><i></i><span>${esc(STATE.t)}</span></div>`}
+const STATE={s:"run",t:"Bağlanıyor"};
+function setState(s,t){STATE.s=s;STATE.t=t;const e=$("#state");if(e){e.dataset.s=s;e.querySelector("span").textContent=t}}
+function renderHome(){
+  const open=NOTES.filter(n=>!n.done);
+  const today=open.filter(n=>isToday(n.at)).length, done=NOTES.filter(n=>n.done).length, links=open.filter(n=>n.url).length;
+  const card=(id,ic,col,num,lbl)=>`<button class="sc" data-smart="${id}"><div class="ic" style="background:${col}">${ic}</div><b>${num}</b><span>${lbl}</span></button>`;
+  const I={today:'<svg viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="5" width="16" height="15" rx="3" fill="none" stroke="#fff" stroke-width="2"/><path d="M4 10h16" stroke="#fff" stroke-width="2"/><rect x="8" y="2.5" width="2" height="4" rx="1"/><rect x="14" y="2.5" width="2" height="4" rx="1"/></svg>',all:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 5h18v3H3zM3 10.5h18v3H3zM3 16h18v3H3z"/></svg>',done:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',link:'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>'};
+  const cnt={};open.forEach(n=>cnt[n.cat]=(cnt[n.cat]||0)+1);
+  $("#app").innerHTML=`<div class="view">
+  <div class="top">${stateHtml()}<button class="act" id="setBtn">Ayarlar</button></div>
+  <h1>Not Defteri</h1>
+  <label class="search">${SEARCH}<input id="q" type="search" placeholder="Ara" value="${esc(Q)}"></label>
+  ${Q?searchResults():`
+  <div class="smart">${card("today",I.today,"#007aff",today,"Bugün")}${card("all",I.all,"#636366",open.length,"Tümü")}${card("links",I.link,"#ff9500",links,"Linkler")}${card("done",I.done,"#8e8e93",done,"Tamamlanan")}</div>
+  <h2>Listelerim</h2>
+  <div class="group">${CATS.map(c=>`<button class="row" data-cat="${esc(c.id)}"><div class="lic" style="background:${colOf(c)}">${c.emoji}</div><span class="nm">${esc(c.name)}</span><span class="ct">${cnt[c.id]||0}</span>${CHEV}</button>`).join("")}</div>
+  <div style="display:flex;justify-content:flex-end;margin-top:6px"><button class="act" id="addList" style="color:var(--blue);min-height:44px;font-size:17px">Liste Ekle</button></div>`}
+  </div>`;
+  const qi=$("#q");qi.oninput=e=>{Q=e.target.value;const p=e.target.selectionStart;renderHome();const n=$("#q");n.focus();n.setSelectionRange(p,p)};
+}
+function searchResults(){
+  const q=Q.toLocaleLowerCase("tr");
+  const L=NOTES.filter(n=>(n.title+" "+(n.detail||"")+" "+(n.url||"")).toLocaleLowerCase("tr").includes(q));
+  if(!L.length)return `<div class="empty">Sonuç yok</div>`;
+  return CATS.concat([{id:"?",name:"Kategorisiz"}]).map(c=>{const a=L.filter(n=>c.id==="?"?!CATS.some(x=>x.id===n.cat):n.cat===c.id);return a.length?section(c,a,false):""}).join("");
+}
+function itemHtml(n,c){
+  return `<div class="it ${n.done?"done":""}" data-id="${n.id}" style="--c:${colOf(c)}"><button class="ck" data-ck aria-label="Tamamlandı"></button><div class="tx" data-ed><div class="t">${linkify(n.title)}</div>${n.detail?`<div class="d">${linkify(n.detail)}</div>`:""}${n.url?`<a class="u" href="${esc(n.url)}" target="_blank" rel="noopener">${esc(n.url.replace(/^https?:\/\/(www\.)?/,""))}</a>`:""}${VIEW.smart&&VIEW.smart!=="done"?"":""}</div></div>`;
+}
+function section(c,arr,collapsible,addRow){
+  const cl=collapsible&&COLL.has(c.id);const col=colOf(c);
+  return `<div class="sec ${cl?"closed":""}" data-sec="${esc(c.id)}"><button class="sech" ${collapsible?`data-tog="${esc(c.id)}"`:""} style="color:${col}">${collapsible?DOWN:""}<span>${esc(c.name)}</span><em>${arr.filter(n=>!n.done).length}</em></button><div class="body"><div>${arr.map(n=>itemHtml(n,c)).join("")}${addRow?addRowHtml(c):""}</div></div></div>`;
+}
+function addRowHtml(c){return `<div class="addrow" style="--c:${colOf(c)}"><span class="plus" style="background:${colOf(c)}">+</span><input data-add="${esc(c.id)}" placeholder="Yeni not" enterkeyhint="done"></div>`}
+function sortN(a){return a.slice().sort((x,y)=>(x.done-y.done)||(y.at-x.at))}
+function renderList(){
+  const back=`<div class="top"><button class="back" id="back"><svg viewBox="0 0 12 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2 2 10l8 8"/></svg>Listeler</button>${VIEW.v==="cat"?`<button class="act" id="editList">Düzenle</button>`:""}</div>`;
+  let html="";
+  if(VIEW.v==="cat"){
+    const c=catOf(VIEW.id);let arr=sortN(NOTES.filter(n=>n.cat===c.id));const hidden=arr.filter(n=>n.done).length;
+    if(!SHOWDONE)arr=arr.filter(n=>!n.done);
+    html=`${back}<div class="ltitle" style="color:${colOf(c)}">${c.emoji} ${esc(c.name)}<span class="cnt">${arr.filter(n=>!n.done).length}</span></div>
+    ${hidden?`<button class="showdone" id="showDone">${SHOWDONE?"Tamamlananları gizle":hidden+" tamamlananı göster"}</button>`:""}
+    <div>${arr.map(n=>itemHtml(n,c)).join("")}${addRowHtml(c)}</div>`;
+  }else{
+    const s=VIEW.smart;const titles={today:["Bugün","#007aff"],all:["Tümü","var(--tx)"],links:["Linkler","#ff9500"],done:["Tamamlanan","#8e8e93"]};
+    const f={today:n=>!n.done&&isToday(n.at),all:n=>SHOWDONE||!n.done,links:n=>!n.done&&n.url,done:n=>n.done}[s];
+    const L=sortN(NOTES.filter(f));
+    const groups=CATS.map(c=>[c,L.filter(n=>n.cat===c.id)]).concat([[{id:"?",name:"Kategorisiz",emoji:"❔",color:"#8e8e93"},L.filter(n=>!CATS.some(c=>c.id===n.cat))]]).filter(g=>g[1].length||(s==="all"&&g[0].id!=="?"));
+    const allClosed=CATS.every(c=>COLL.has(c.id));
+    html=`${back}<div class="ltitle" style="color:${titles[s][1]}">${titles[s][0]}<span class="cnt">${L.filter(n=>!n.done).length||L.length}</span></div>
+    <div style="display:flex;gap:16px">${s==="all"?`<button class="showdone" id="togAll">${allClosed?"Tümünü aç":"Tümünü daralt"}</button><button class="showdone" id="showDone">${SHOWDONE?"Tamamlananları gizle":"Tamamlananları göster"}</button>`:""}</div>
+    ${groups.length?groups.map(([c,a])=>section(c,a,true,s==="all"&&c.id!=="?")).join(""):`<div class="empty">Burada not yok</div>`}`;
+  }
+  $("#app").innerHTML=`<div class="view">${html}</div>`;
+}
+
+/* ================= events ================= */
+document.addEventListener("click",e=>{
+  const t=e.target;
+  if(t.closest(".dock")||t.closest(".ov"))return;
+  if(t.closest("a"))return;
+  const sm=t.closest("[data-smart]");if(sm){VIEW={v:"smart",smart:sm.dataset.smart};SHOWDONE=false;render();scrollTo(0,0);return}
+  const ct=t.closest("[data-cat]");if(ct){VIEW={v:"cat",id:ct.dataset.cat};SHOWDONE=false;render();scrollTo(0,0);return}
+  if(t.closest("#back")){VIEW={v:"home"};render();return}
+  if(t.closest("#addList"))return listSheet();
+  if(t.closest("#setBtn"))return settings();
+  if(t.closest("#editList"))return listSheet(catOf(VIEW.id));
+  if(t.closest("#showDone")){SHOWDONE=!SHOWDONE;render();return}
+  if(t.closest("#togAll")){if(CATS.every(c=>COLL.has(c.id)))COLL.clear();else CATS.forEach(c=>COLL.add(c.id));saveUI();render();return}
+  const tg=t.closest("[data-tog]");if(tg){const id=tg.dataset.tog;COLL.has(id)?COLL.delete(id):COLL.add(id);tg.closest(".sec").classList.toggle("closed",COLL.has(id));saveUI();return}
+  const it=t.closest(".it");if(!it)return;const n=NOTES.find(x=>x.id===it.dataset.id);if(!n)return;
+  if(t.closest("[data-ck]")){it.classList.toggle("done");setTimeout(()=>saveNote({...n,done:!n.done}),VIEW.v==="cat"&&!SHOWDONE&&!n.done?450:0);return}
+  if(t.closest("[data-ed]"))noteSheet(n);
+});
+document.addEventListener("keydown",e=>{
+  const a=e.target.closest&&e.target.closest("[data-add]");
+  if(a&&e.key==="Enter"&&!e.isComposing){e.preventDefault();const v=a.value.trim();if(!v)return;const cat=a.dataset.add;a.value="";saveNote({title:v,detail:"",url:/^https?:\/\//.test(v)?v:"",cat,done:false,at:Date.now()}).then(()=>{const n=document.querySelector(`[data-add="${cat}"]`);if(n)n.focus()})}
+});
+
+/* ================= sheets ================= */
+function overlay(html){const o=document.createElement("div");o.className="ov";o.innerHTML=`<div class="sheet"><div class="grab"></div>${html}</div>`;o.addEventListener("click",e=>{if(e.target===o)o.remove()});document.body.appendChild(o);return o}
+function noteSheet(n){
+  const o=overlay(`<div class="shh"><button id="x">Vazgeç</button><b>Ayrıntılar</b><button class="done" id="s">Bitti</button></div>
+  <div class="fg"><input id="ft" value="${esc(n.title)}" placeholder="Başlık"><textarea id="fd" placeholder="Notlar">${esc(n.detail||"")}</textarea><input id="fu" value="${esc(n.url||"")}" placeholder="URL" inputmode="url" autocapitalize="off"></div>
+  <div class="lab">Liste</div><div class="fg"><select id="fc">${CATS.map(c=>`<option value="${esc(c.id)}" ${c.id===n.cat?"selected":""}>${c.emoji} ${esc(c.name)}</option>`).join("")}</select></div>
+  <button class="danger" id="del">Notu Sil</button>`);
+  o.querySelector("#x").onclick=()=>o.remove();
+  o.querySelector("#s").onclick=()=>{const t=o.querySelector("#ft").value.trim();if(!t)return;saveNote({...n,title:t,detail:o.querySelector("#fd").value.trim(),url:o.querySelector("#fu").value.trim(),cat:o.querySelector("#fc").value});o.remove()};
+  o.querySelector("#del").onclick=()=>{delNotes([n.id]);o.remove()};
+}
+function listSheet(c){
+  const isNew=!c;c=c||{id:"",name:"",emoji:"📌",color:"#007aff"};let col=colOf(c.id?c:{id:"x",color:c.color}),emo=c.emoji;
+  const o=overlay(`<div class="shh"><button id="x">Vazgeç</button><b>${isNew?"Yeni Liste":"Listeyi Düzenle"}</b><button class="done" id="s">Bitti</button></div>
+  <div style="text-align:center;margin:6px 0 14px"><div class="lic" id="pv" style="width:88px;height:88px;font-size:42px;margin:0 auto;background:${col}">${emo}</div></div>
+  <div class="fg"><input id="nm" value="${esc(c.name)}" placeholder="Liste Adı" style="text-align:center;font-weight:600;font-size:20px"></div>
+  <div class="fg"><div class="colors">${PALETTE.map(p=>`<button data-col="${p}" class="${p===col?"on":""}" style="background:${p}"></button>`).join("")}</div></div>
+  <div class="fg"><div class="emojis">${EMOJIS.map(x=>`<button data-emo="${x}" class="${x===emo?"on":""}">${x}</button>`).join("")}</div></div>
+  ${!isNew&&c.id!=="diger"?`<button class="danger" id="del">Listeyi Sil</button>`:""}`);
+  const pv=o.querySelector("#pv");
+  o.querySelectorAll("[data-col]").forEach(b=>b.onclick=()=>{col=b.dataset.col;pv.style.background=col;o.querySelectorAll("[data-col]").forEach(x=>x.classList.toggle("on",x===b))});
+  o.querySelectorAll("[data-emo]").forEach(b=>b.onclick=()=>{emo=b.dataset.emo;pv.textContent=emo;o.querySelectorAll("[data-emo]").forEach(x=>x.classList.toggle("on",x===b))});
+  o.querySelector("#x").onclick=()=>o.remove();
+  o.querySelector("#s").onclick=async()=>{const nm=o.querySelector("#nm").value.trim();if(!nm)return;
+    if(isNew){let id=slug(nm);if(CATS.some(x=>x.id===id))id+="-"+Date.now().toString(36).slice(-3);CATS.push({id,name:nm,emoji:emo,color:col})}
+    else{const k=CATS.find(x=>x.id===c.id);Object.assign(k,{name:nm,emoji:emo,color:col})}
+    await saveCats();o.remove();render()};
+  const d=o.querySelector("#del");if(d)d.onclick=async()=>{CATS=CATS.filter(x=>x.id!==c.id);await saveCats();for(const n of NOTES.filter(n=>n.cat===c.id))await saveNote({...n,cat:"diger"});o.remove();VIEW={v:"home"};render()};
+}
+$("#histBtn").onclick=()=>{
+  const o=overlay(`<div class="shh"><span></span><b>Claude ile sohbet</b><button class="done" id="x">Kapat</button></div><div id="hl">${CHAT.length?CHAT.map(m=>`<div class="msg ${m.r}">${esc(m.t)}</div>`).join(""):'<div class="empty">Henüz sohbet yok</div>'}</div>${CHAT.length?'<button class="danger" id="clr" style="margin-top:16px">Sohbeti Temizle</button>':""}`);
+  o.querySelector("#x").onclick=()=>o.remove();const c=o.querySelector("#clr");if(c)c.onclick=()=>{CHAT=[];saveChat();o.remove()};
+  const s=o.querySelector(".sheet");s.scrollTop=s.scrollHeight;
+};
+
+/* ================= data (yerel + Gist) ================= */
+const LSj=(k,v)=>{try{if(v===undefined){const s=localStorage.getItem(k);if(s==null)return null;try{return JSON.parse(s)}catch(e){return s}}if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}};
+let STORE=LSj("nt_store")||{notes:{},cats:null,catsU:0,ui:{collapsed:[]},uiU:0};
+CHAT=LSj("nt_chat")||[];
+function fromStore(){NOTES=Object.entries(STORE.notes).filter(([,v])=>!v.del).map(([id,v])=>({id,...v}));if(STORE.cats&&STORE.cats.length)CATS=STORE.cats.map(c=>({...c}));COLL=new Set((STORE.ui&&STORE.ui.collapsed)||[])}
+function persist(){LSj("nt_store",STORE);queueSync()}
+async function saveNote(n){
+  const id=n.id||("n"+Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+  STORE.notes[id]={title:n.title,detail:n.detail||"",url:n.url||"",cat:n.cat,done:!!n.done,at:n.at||Date.now(),u:Date.now()};
+  persist();fromStore();render();return id;
+}
+async function delNotes(ids){
+  const gone=NOTES.filter(n=>ids.includes(n.id)).map(n=>({...n}));const t=Date.now();
+  ids.forEach(id=>{if(STORE.notes[id])STORE.notes[id]={del:true,u:t}});
+  persist();fromStore();render();return gone;
+}
+async function restore(list){for(const n of list)await saveNote(n)}
+async function saveCats(){STORE.cats=CATS.map(c=>({...c}));STORE.catsU=Date.now();persist()}
+function saveUI(){STORE.ui={collapsed:[...COLL]};STORE.uiU=Date.now();persist()}
+function saveChat(){CHAT=CHAT.slice(-60);LSj("nt_chat",CHAT)}
+
+/* ----- GitHub Gist senkron ----- */
+const tok=()=>{const v=LSj("gh_token");return typeof v==="string"&&v?v:null};
+async function gh(path,opt={}){const r=await fetch("https://api.github.com"+path,{...opt,cache:"no-store",headers:{"Authorization":"Bearer "+tok(),"Accept":"application/vnd.github+json",...(opt.body?{"Content-Type":"application/json"}:{})}});if(!r.ok)throw new Error("GitHub "+r.status);return r.status===204?null:r.json()}
+async function findGist(file,lsKey,create){
+  let id=LSj(lsKey);if(id)return id;
+  for(let p=1;p<=5;p++){const L=await gh("/gists?per_page=100&page="+p);const f=L.find(g=>g.files&&g.files[file]);if(f){LSj(lsKey,f.id);return f.id}if(L.length<100)break}
+  if(!create)return null;
+  const g=await gh("/gists",{method:"POST",body:JSON.stringify({description:"Not Defteri verisi (otomatik senkron)",public:false,files:{[file]:{content:"{}"}}})});LSj(lsKey,g.id);return g.id;
+}
+async function readGistFile(id,file){const g=await gh("/gists/"+id);const f=g.files[file];if(!f)return null;let c=f.content;if(f.truncated)c=await (await fetch(f.raw_url,{cache:"no-store"})).text();try{return JSON.parse(c||"{}")}catch(e){return {}}}
+function mergeStore(a,b){
+  const o={notes:{...a.notes},cats:a.cats,catsU:a.catsU||0,ui:a.ui,uiU:a.uiU||0};
+  for(const[k,v]of Object.entries((b&&b.notes)||{})){if(!o.notes[k]||(v.u||0)>(o.notes[k].u||0))o.notes[k]=v}
+  if(b&&(b.catsU||0)>o.catsU&&b.cats){o.cats=b.cats;o.catsU=b.catsU}
+  if(b&&(b.uiU||0)>o.uiU&&b.ui){o.ui=b.ui;o.uiU=b.uiU}
+  return o;
+}
+let syncing=false,again=false,qt=null;
+function queueSync(){if(!tok())return;clearTimeout(qt);qt=setTimeout(syncNow,1500)}
+async function syncNow(){
+  if(!tok()){setState("off",navigator.onLine?"Senkron kapalı":"Çevrimdışı");return}
+  if(!navigator.onLine){setState("off","Çevrimdışı · sonra senkronlanır");return}
+  if(syncing){again=true;return}syncing=true;setState("run","Senkronlanıyor");
+  try{
+    const id=await findGist("notlar.json","nt_gist",true);
+    const remote=await readGistFile(id,"notlar.json")||{};
+    const m=mergeStore(STORE,remote);
+    const J=JSON.stringify;
+    if(J(m)!==J(STORE)){STORE=m;LSj("nt_store",STORE);fromStore();if(!document.activeElement||!document.activeElement.matches("[data-add],#q,#inp"))render()}
+    if(J(m)!==J(remote))await gh("/gists/"+id,{method:"PATCH",body:J({files:{"notlar.json":{content:J(m)}}})});
+    setState("ok","Senkron");
+  }catch(e){setState("err",/401/.test(e.message)?"GitHub anahtarı geçersiz":"Senkron hatası")}
+  syncing=false;if(again){again=false;syncNow()}
+}
+
+/* ----- İzle'ye doğrudan ekleme (aynı Gist hesabı) ----- */
+async function tmdb(path,params){const u=new URL("https://api.themoviedb.org/3"+path);u.searchParams.set("language","tr-TR");Object.entries(params||{}).forEach(([a,b])=>u.searchParams.set(a,b));const r=await fetch(u,{headers:{accept:"application/json",Authorization:"Bearer "+TMDB_KEY}});if(!r.ok)throw new Error("TMDB "+r.status);return r.json()}
+async function sendToIzle(items){
+  if(!tok())throw new Error("GitHub anahtarı yok");
+  if(!navigator.onLine)throw new Error("internet yok");
+  const id=await findGist("izlerim-data.json","izle_gist",false);if(!id)throw new Error("İzle verisi bulunamadı");
+  const data=await readGistFile(id,"izlerim-data.json")||{};
+  let ok=0;const miss=[];
+  for(const it of items){
+    const t=it.k==="movie"?"movie":"tv";let q=String(it.t||"");const ym=q.match(/(19|20)\d{2}/);const y=ym?ym[0]:"";
+    q=q.replace(/\([^)]*\)/g,"").replace(/\s+/g," ").trim();if(!q)continue;
+    try{
+      const p={query:q,include_adult:"false"};if(y)p[t==="tv"?"first_air_date_year":"year"]=y;
+      let d=await tmdb("/search/"+t,p);let tt=t;
+      if(!(d.results||[]).length){d=await tmdb("/search/multi",{query:q,include_adult:"false"});d.results=(d.results||[]).filter(x=>x.media_type==="tv"||x.media_type==="movie");if(d.results[0])tt=d.results[0].media_type}
+      const x=(d.results||[])[0];if(!x){miss.push(it.t);continue}
+      const k=tt+":"+x.id;
+      if(!(data[k]&&data[k].s))data[k]={...(data[k]||{}),n:x.name||x.title||"",o:x.original_name||x.original_title||"",y:(x.first_air_date||x.release_date||"").slice(0,4),p:x.poster_path||null,g:x.genre_ids||[],s:4,at:Date.now()};
+      ok++;
+    }catch(e){miss.push(it.t)}
+  }
+  if(ok)await gh("/gists/"+id,{method:"PATCH",body:JSON.stringify({files:{"izlerim-data.json":{content:JSON.stringify(data)}}})});
+  return {ok,miss};
+}
+
+/* ----- Claude API ----- */
+async function claudeJSON(prompt){
+  const key=LSj("anth_key");
+  const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"x-api-key":key,"anthropic-version":"2023-06-01","content-type":"application/json","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:LSj("anth_model")||"claude-haiku-5-5",max_tokens:4096,messages:[{role:"user",content:prompt}]})});
+  let d={};try{d=await r.json()}catch(e){}
+  if(!r.ok)throw new Error((d.error&&d.error.message)||("HTTP "+r.status));
+  const t=(d.content||[]).map(c=>c.text||"").join("");const m=t.match(/\{[\s\S]*\}/);
+  return JSON.parse(m?m[0]:t);
+}
+
+/* ----- Ayarlar ----- */
+function settings(){
+  const model=LSj("anth_model")||"claude-haiku-5-5";
+  const o=overlay(`<div class="shh"><button id="x">Vazgeç</button><b>Ayarlar</b><button class="done" id="s">Kaydet</button></div>
+  <div class="lab">Claude (Anthropic API)</div>
+  <div class="fg"><input id="ak" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(LSj("anth_key")||"")}"><select id="am"><option value="claude-haiku-5-5" ${model==="claude-haiku-5-5"?"selected":""}>Haiku: hızlı ve ucuz (önerilen)</option><option value="claude-sonnet-5-5" ${model==="claude-sonnet-5-5"?"selected":""}>Sonnet: daha akıllı</option></select></div>
+  <p style="font-size:13px;color:var(--tx2);margin:-14px 16px 22px">Anahtar: <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> → API Keys. Kullanım başına ücretlidir; anahtar yalnızca bu cihazda saklanır.</p>
+  <div class="lab">Senkron (GitHub Gist)</div>
+  <div class="fg"><input id="gt" type="password" autocomplete="off" placeholder="github_pat_…" value="${esc(tok()||"")}"></div>
+  <p style="font-size:13px;color:var(--tx2);margin:-14px 16px 22px">İzle ve Hesap'ta kullandığın anahtarın aynısı. Notlar Mac ve iPhone arasında bununla senkronlanır, İzle'ye ekleme de bununla çalışır.</p>
+  <button class="danger" id="now" style="color:var(--blue)">Şimdi senkronla</button>`);
+  o.querySelector("#x").onclick=()=>o.remove();
+  o.querySelector("#now").onclick=()=>{o.remove();syncNow()};
+  o.querySelector("#s").onclick=()=>{
+    const ak=o.querySelector("#ak").value.trim(),gt=o.querySelector("#gt").value.trim();
+    LSj("anth_key",ak||null);LSj("anth_model",o.querySelector("#am").value);
+    if(gt!==(tok()||"")){LSj("gh_token",gt||null);LSj("nt_gist",null);LSj("izle_gist",null)}
+    o.remove();toast("Kaydedildi");syncNow();
+  };
+}
+
+/* ----- Eski Not Defteri'nden içe aktarma (#ice=...) ----- */
+function importHash(){
+  const m=location.hash.match(/^#ice=([A-Za-z0-9_\-]+)/);if(!m)return;
+  try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}
+  try{let b=m[1].replace(/-/g,"+").replace(/_/g,"/");while(b.length%4)b+="=";
+    const d=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0))));
+    let n=0;const t=Date.now();
+    (d.notes||[]).forEach(x=>{if(x&&x.id&&!STORE.notes[x.id]){STORE.notes[x.id]={title:x.title,detail:x.detail||"",url:x.url||"",cat:x.cat,done:!!x.done,at:x.at||t,u:t};n++}});
+    if(d.cats&&d.cats.length){STORE.cats=d.cats;STORE.catsU=t}
+    if(d.collapsed&&!STORE.uiU){STORE.ui={collapsed:d.collapsed};STORE.uiU=t}
+    persist();fromStore();render();toast(n+" not içe aktarıldı");
+  }catch(e){toast("İçe aktarma okunamadı")}
+}
+
+/* ================= Claude ================= */
+const inp=$("#inp");
+inp.oninput=()=>{inp.style.height="auto";inp.style.height=Math.min(inp.scrollHeight,140)+"px";$("#send").disabled=!inp.value.trim()||busy};
+const TOUCH=matchMedia("(pointer:coarse)").matches;
+inp.setAttribute("enterkeyhint",TOUCH?"enter":"send");
+inp.onkeydown=e=>{if(!TOUCH&&e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();$("#form").requestSubmit()}};
+$("#form").onsubmit=e=>{e.preventDefault();const t=inp.value.trim();if(!t||busy)return;inp.value="";inp.oninput();ask(t)};
+function b64url(obj){const bytes=new TextEncoder().encode(JSON.stringify(obj));let s="";bytes.forEach(b=>s+=String.fromCharCode(b));return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
+function showReply(r){
+  LAST=r;const box=$("#replyBox");
+  if(!r){box.innerHTML=busy?'<div class="thinking">Claude düşünüyor…</div>':"";return}
+  box.innerHTML=`<div class="reply"><div class="who"><span>Claude</span><button id="rx" aria-label="Kapat">✕</button></div><div>${esc(r.text)}</div>${r.tags&&r.tags.length?`<div class="tags">${r.tags.map(t=>`<span>${esc(t)}</span>`).join("")}</div>`:""}<div class="acts" id="racts"></div></div>`;
+  $("#rx").onclick=()=>showReply(null);
+  const acts=$("#racts");
+  (r.buttons||[]).forEach(b=>{const el=document.createElement(b.href?"a":"button");el.className="pill"+(b.secondary?" sec2":"");el.textContent=b.label;if(b.href){el.href=b.href;el.target="_blank";el.rel="noopener"}el.addEventListener("click",()=>b.run&&b.run(el));acts.appendChild(el)});
+}
+async function ask(text){
+  CHAT.push({r:"u",t:text});busy=true;showReply(null);saveChat();
+  if(!LSj("anth_key")){busy=false;showReply({text:"Claude için Anthropic API anahtarını bir kez girmen gerekiyor.",buttons:[{label:"Anahtarı gir",run:()=>settings()}]});return}
+  if(!navigator.onLine){busy=false;showReply({text:"İnternet yok. Notu altta “+ Yeni not” ile elle ekleyebilirsin; Claude bağlantı gelince çalışır."});return}
+  const ctx=CATS.map(c=>{const a=NOTES.filter(n=>n.cat===c.id).map(n=>`- [${n.done?"x":" "}] (id:${n.id}) ${n.title}${n.detail?" — "+n.detail.slice(0,70):""}`);return `## ${c.name} (id:${c.id})\n${a.join("\n")||"(boş)"}`}).join("\n").slice(0,16000);
+  const hist=CHAT.slice(-8,-1).map(m=>`${m.r==="u"?"Kullanıcı":"Asistan"}: ${m.t.slice(0,300)}`).join("\n");
+  const prompt=`Sen Talha'nın kişisel not defteri asistanısın. Türkçe ve kısa yaz. Kullanıcının mesajı ya yeni not(lar)dır, ya mevcut notlar üzerinde bir komuttur, ya da sorudur.
+- Yeni not: her ayrı notu uygun listeye koy (add). Başlık kısa; film/dizi adını düzgün yaz, yıl varsa başlıkta parantez içinde; link url alanına. Zaten olan notu tekrar ekleme. Uygun liste yoksa newCats ile yeni liste aç (gerçekten gerekmedikçe açma, yoksa "diger").
+- Komut: notları id ile hedefle. İşlemler: {"op":"delete","ids":[...]}, {"op":"done","ids":[...]}, {"op":"undone","ids":[...]}, {"op":"move","ids":[...],"cat":"liste id"}, {"op":"edit","id":"..","title":"..","detail":".."}.
+- "İzle uygulamasına / izleme listesine / izleneceklere taşı/gönder/ekle" denirse: {"op":"izle","ids":[...],"items":[{"t":"Ad (yıl)","k":"tv" veya "movie"}],"thenDelete":true/false}. Diziler listesi tv, filmler listesi movie. Kullanıcı "buradan sil" veya "taşı" derse thenDelete true, "ekle/kopyala" derse false.
+- Soru: mevcut notlardan cevapla, add ve actions boş kalsın.
+Listeler ve notlar:
+${ctx}
+
+Önceki konuşma:
+${hist||"(yok)"}
+
+Yeni mesaj:
+"""${text}"""
+
+SADECE şu JSON'u döndür:
+{"reply":"1-2 cümle","add":[{"cat":"liste id","title":"","detail":"","url":""}],"newCats":[{"id":"kisa-id","name":"Ad","emoji":"🙂"}],"actions":[]}`;
+  let reply={text:"Tamam."};
+  try{
+    const r=await claudeJSON(prompt);
+    if(r&&r.newCats&&r.newCats.length){for(const c of r.newCats){const id=c.id||slug(c.name);if(c&&c.name&&!CATS.some(x=>x.id===id))CATS.push({id,name:c.name,emoji:c.emoji||"📌"})}await saveCats()}
+    const tags=[],buttons=[];let undo=[];
+    for(const a of (r&&r.add)||[]){if(!a||!a.title)continue;const cat=CATS.some(c=>c.id===a.cat)?a.cat:"diger";await saveNote({title:a.title,detail:a.detail||"",url:a.url||"",cat,done:false,at:Date.now()});tags.push(catOf(cat).emoji+" "+a.title)}
+    for(const a of (r&&r.actions)||[]){
+      const ids=(a.ids||[]).filter(id=>NOTES.some(n=>n.id===id));
+      if(a.op==="delete"&&ids.length){undo=undo.concat(await delNotes(ids));tags.push("🗑 "+ids.length+" not silindi")}
+      else if((a.op==="done"||a.op==="undone")&&ids.length){for(const id of ids){const n=NOTES.find(x=>x.id===id);await saveNote({...n,done:a.op==="done"})}tags.push((a.op==="done"?"✓ ":"↺ ")+ids.length+" not")}
+      else if(a.op==="move"&&ids.length&&CATS.some(c=>c.id===a.cat)){for(const id of ids){const n=NOTES.find(x=>x.id===id);await saveNote({...n,cat:a.cat})}tags.push("→ "+catOf(a.cat).name+": "+ids.length)}
+      else if(a.op==="edit"&&a.id){const n=NOTES.find(x=>x.id===a.id);if(n)await saveNote({...n,title:a.title||n.title,detail:a.detail??n.detail})}
+      else if(a.op==="izle"){
+        const items=(a.items&&a.items.length?a.items:ids.map(id=>{const n=NOTES.find(x=>x.id===id);return{t:n.title,k:n.cat==="filmler"?"movie":"tv"}})).filter(x=>x&&x.t);
+        if(!items.length)continue;
+        showReply({text:items.length+" başlık İzle'ye ekleniyor…"});
+        try{
+          const res=await sendToIzle(items);
+          tags.push("🎬 "+res.ok+" başlık İzle › İzlenebilir"+(res.miss.length?" · bulunamadı: "+res.miss.slice(0,3).join(", "):""));
+          if(a.thenDelete&&ids.length){undo=undo.concat(await delNotes(ids));tags.push("🗑 "+ids.length+" not buradan silindi")}
+        }catch(err){
+          const href=IZLE_URL+"#ekle="+b64url(items);const del=a.thenDelete?ids:[];
+          tags.push("⚠️ Doğrudan eklenemedi: "+(err.message||err));
+          buttons.push({label:`İzle'de aç ve ekle (${items.length})`,href,run:async()=>{if(del.length)await delNotes(del)}});
+        }
+      }
+    }
+    if(undo.length)buttons.push({label:"Geri al",secondary:true,run:async()=>{await restore(undo);toast("Geri alındı");showReply(null)}});
+    reply={text:(r&&r.reply)||"Tamam.",tags:tags.slice(0,12),buttons};
+  }catch(e){
+    reply={text:"Claude hatası: "+(e&&(e.message||e.code)||"bilinmiyor"),buttons:/key|auth|401|invalid x-api/i.test(String(e&&e.message))?[{label:"Anahtarı kontrol et",run:()=>settings()}]:[]};
+  }
+  busy=false;CHAT.push({r:"a",t:reply.text+(reply.tags&&reply.tags.length?"\n"+reply.tags.join(" · "):"")});saveChat();showReply(reply);render();$("#send").disabled=!inp.value.trim();
+}
+
+
+/* ================= boot ================= */
+fromStore();
+if(!STORE.cats||!STORE.cats.length){STORE.cats=CATS.map(c=>({...c}));LSj("nt_store",STORE)}
+render();importHash();
+syncNow();
+window.addEventListener("online",()=>syncNow());
+window.addEventListener("hashchange",importHash);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncNow()});
+setInterval(()=>{if(navigator.onLine&&STATE.s!=="ok"&&STATE.s!=="run")syncNow()},60000);
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body>
+</html>
