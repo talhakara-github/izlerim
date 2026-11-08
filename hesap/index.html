@@ -67,6 +67,31 @@ button,input,textarea{font:inherit;color:inherit}button{border:0;background:none
 .sync{font-size:13px;color:#98989f;display:flex;align-items:center;gap:6px}
 .sync i{width:8px;height:8px;border-radius:50%;background:#636366}.sync[data-s=ok] i{background:#30d158}.sync[data-s=run] i{background:#ffd60a}.sync[data-s=err] i{background:#ff453a}
 .toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%);background:rgba(44,44,46,.95);padding:9px 15px;border-radius:14px;font-size:14px;z-index:30}
+
+/* ===== Apple HIG katmanı ===== */
+.main{font-weight:300;letter-spacing:-.025em;cursor:default}
+.prev{font-weight:400}
+.ln{font-weight:300}.ln .r{font-weight:400}
+.k{font-weight:400;transition:background-color .35s ease,filter .35s ease,transform .1s ease}
+.k:active{transition:none}
+.k.n:active{filter:brightness(.82);transform:none}
+.k.d:active{filter:brightness(1.7);transform:none}
+.k.o:active,.k.eq:active{filter:brightness(1.18);transform:none}
+.k.o.on{background:#fff!important;color:#c98f2c}
+.sheet{gap:12px;padding-top:8px}
+.sheet .grabber{width:36px;height:5px;border-radius:3px;background:#48484a;align-self:center;margin-bottom:8px}
+.sheet h3{font-size:20px;text-align:center;font-weight:600}
+.sheet p{font-size:15px;text-align:center}
+.sheet input,.sheet textarea{font-size:17px;min-height:44px;background:#2c2c2e}
+.btn{height:50px;font-size:17px}
+.hl{background:#2c2c2e;border-radius:10px}
+.hi{min-height:44px}
+.hi .r{font-size:20px;font-weight:400}
+.hd{font-size:13px;text-transform:uppercase;letter-spacing:.02em;margin:10px 4px 2px}
+.toast{font-size:15px;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+.hint{text-align:right;color:#8e8e93;font-size:15px;padding:6px 0;line-height:1.4}.btn-sync{color:#d9a43f;align-self:flex-end;font-size:15px;padding:8px 0}
+.k.d{font-size:clamp(24px,7.4vw,32px)}
 </style>
 </head>
 <body>
@@ -78,16 +103,16 @@ button,input,textarea{font:inherit;color:inherit}button{border:0;background:none
   </div>
   <div class="keys" id="keys">
     <button class="k d" data-k="AC">AC</button>
-    <button class="k d" data-k="neg">+/−</button>
+    <button class="k d" data-k="(">(</button>
+    <button class="k d" data-k=")">)</button>
     <button class="k d" data-k="%">%</button>
-    <button class="k d" data-k="bs" aria-label="Sil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H5M11 5l-7 7 7 7"/></svg></button>
-    <button class="k d mut" data-k="menu" aria-label="Ayarlar"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="5" r="2.3"/><circle cx="12" cy="5" r="2.3"/><circle cx="19" cy="5" r="2.3"/><circle cx="5" cy="12" r="2.3"/><circle cx="12" cy="12" r="2.3"/><circle cx="19" cy="12" r="2.3"/><circle cx="5" cy="19" r="2.3"/><circle cx="12" cy="19" r="2.3"/><circle cx="19" cy="19" r="2.3"/></svg></button>
+    <button class="k d" data-k="bs" aria-label="Sil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 5H9L3 12l6 7h12a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1Z"/><path d="m11 9 6 6M17 9l-6 6"/></svg></button>
     <button class="k n" data-k="7">7</button><button class="k n" data-k="8">8</button><button class="k n" data-k="9">9</button>
     <button class="k o" data-k="÷">÷</button>
-    <button class="k d mut" data-k="trash" aria-label="Geçmişi temizle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M9 6V4h6v2M6 6l1 14h10l1-14M10 10v7M14 10v7"/></svg></button>
+    <button class="k d" data-k="neg">+/−</button>
     <button class="k n" data-k="4">4</button><button class="k n" data-k="5">5</button><button class="k n" data-k="6">6</button>
     <button class="k o" data-k="×">×</button>
-    <button class="k d mut" data-k="list" aria-label="Geçmiş ve notlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4" cy="6" r="1.2" fill="currentColor"/><circle cx="4" cy="12" r="1.2" fill="currentColor"/><circle cx="4" cy="18" r="1.2" fill="currentColor"/></svg></button>
+    <button class="k d mut" data-k="list" aria-label="Geçmiş, notlar ve ayarlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4" cy="6" r="1.2" fill="currentColor"/><circle cx="4" cy="12" r="1.2" fill="currentColor"/><circle cx="4" cy="18" r="1.2" fill="currentColor"/></svg></button>
     <button class="k n" data-k="1">1</button><button class="k n" data-k="2">2</button><button class="k n" data-k="3">3</button>
     <button class="k o" data-k="−">−</button>
     <button class="k eq" data-k="=">=</button>
@@ -116,86 +141,95 @@ function fmtNum(n){
   if(a!==0&&(a>=1e16||a<1e-10))return r.toExponential(6);
   return r.toLocaleString("en-US",{maximumFractionDigits:10});
 }
-function fmtTyped(s){ // keep what user typed, add grouping
+function fmtTyped(s){
   const neg=s.startsWith("-");if(neg)s=s.slice(1);
+  const pct=s.endsWith("%");if(pct)s=s.slice(0,-1);
+  if(s==="")return (neg?"-":"")+(pct?"%":"");
   let [i,d]=s.split(".");i=i||"0";
   i=i.replace(/^0+(?=\d)/,"").replace(/\B(?=(\d{3})+(?!\d))/g,",");
-  return (neg?"-":"")+i+(d!==undefined?"."+d:"");
+  return (neg?"-":"")+i+(d!==undefined?"."+d:"")+(pct?"%":"");
 }
-function tokens(s){ // -> [num, op, num, ...]; numbers may end with %
-  const t=[];let num="";
-  for(let i=0;i<s.length;i++){const c=s[i];
-    if(isOp(c)&&num!==""&&num!=="-"){t.push(num);t.push(c);num=""}
-    else num+=c;}
-  if(num!=="")t.push(num);return t;
-}
-function evalTokens(t){
-  if(t.length&&isOp(t[t.length-1]))t=t.slice(0,-1);
-  if(!t.length)return NaN;
-  // resolve percents left-to-right (iOS rule: a+b% = a+a*b/100)
-  const v=[];
-  for(let i=0;i<t.length;i++){
-    if(i%2){v.push(t[i]);continue}
-    let s=t[i],p=s.endsWith("%");if(p)s=s.slice(0,-1);
-    let n=parseFloat(s);if(isNaN(n))return NaN;
-    if(p){const op=v[v.length-1];if(op==="+"||op==="−"){n=evalNums(v.slice(0,-1))*n/100}else n=n/100}
-    v.push(n);
+// tokens: numbers ("-12.5", "3%"), ops, "(", ")"
+function lex(s){const t=[];let n="";for(const c of s){if(isOp(c)||c==="("||c===")"){if(n){t.push(n);n=""}t.push(c)}else{n+=c;if(c==="%"){t.push(n);n=""}}}if(n)t.push(n);return t}
+const isNum=x=>x!==undefined&&!isOp(x)&&x!=="("&&x!==")";
+function parse(t){
+  let i=0;
+  const peek=()=>t[i];
+  function factor(){
+    let x=t[i];
+    if(x==="("){i++;const v=expr();if(t[i]===")")i++;return{v,pct:false}}
+    if(x==="-"){i++;const f=factor();return{v:-f.v,pct:false}}
+    if(x==="-("){i++;const v=expr();if(t[i]===")")i++;return{v:-v,pct:false}}
+    if(isNum(x)){i++;let s=x,p=s.endsWith("%");if(p)s=s.slice(0,-1);let neg=s.startsWith("-");if(neg)s=s.slice(1);let v=parseFloat(s||"0");if(neg)v=-v;return p?{v:v/100,pct:true}:{v,pct:false}}
+    throw new Error("bad");
   }
-  return evalNums(v);
+  function term(){let f=factor(),v=f.v,n=1;while(peek()==="×"||peek()==="÷"){const o=t[i++];const g=factor();v=o==="×"?v*g.v:v/g.v;n++}return{v,pct:f.pct&&n===1}}
+  function expr(){let v=term().v;while(peek()==="+"||peek()==="−"){const o=t[i++];const g=term();const w=g.pct?v*g.v:g.v;v=o==="+"?v+w:v-w}return v}
+  const v=expr();if(i<t.length)throw new Error("bad");return v;
 }
-function evalNums(v){
-  const w=v.slice();
-  for(let i=1;i<w.length;i+=2)if(w[i]==="×"||w[i]==="÷"){const r=w[i]==="×"?w[i-1]*w[i+1]:w[i-1]/w[i+1];w.splice(i-1,3,r);i-=2}
-  let r=w[0];for(let i=1;i<w.length;i+=2)r=w[i]==="+"?r+w[i+1]:r-w[i+1];
-  return r;
+function complete(s){ // make partial input evaluable
+  while(s&&(isOp(s.slice(-1))||s.slice(-1)==="("||s.slice(-1)==="-"||s.slice(-1)==="."))s=s.slice(0,-1);
+  let o=0;for(const c of s){if(c==="(")o++;else if(c===")")o--}
+  return s+")".repeat(Math.max(0,o));
 }
-const evalStr=s=>evalTokens(tokens(s));
-function display(s){return tokens(s).map((x,i)=>i%2?x:(x.endsWith("%")?fmtTyped(x.slice(0,-1))+"%":fmtTyped(x))).join("")}
+function evalStr(s){try{s=complete(s);if(!s)return NaN;return parse(lex(s.replace(/-\(/g,"-1×(")))}catch(e){return NaN}}
+function display(s){return lex(s).map(x=>isNum(x)?fmtTyped(x):x).join("")}
+function tokens(s){return lex(s)}
 
 /* ===== input ===== */
-function lastNum(){const t=tokens(ex);return t.length&&!isOp(t[t.length-1])?t[t.length-1]:""}
+function lastNum(){const m=ex.match(/-?[\d.]*%?$/);return m?m[0]:""}
+function opens(){let o=0;for(const c of ex){if(c==="(")o++;else if(c===")")o--}return o}
 function press(k){
   const L=ex.slice(-1);
   if(/^\d$/.test(k)){
-    if(L==="%")ex+="×";
+    if(L==="%"||L===")")ex+="×";
     const n=lastNum();
     if(n.replace(/[^\d]/g,"").length>=16)return;
-    if(n==="0")ex=ex.slice(0,-1);else if(n==="-0")ex=ex.slice(0,-1);
+    if(n==="0"||n==="-0")ex=ex.slice(0,-1);
     ex+=k;
   }else if(k==="."){
-    const n=lastNum();if(n.includes(".")||n.endsWith("%"))return;
+    if(L==="%"||L===")")ex+="×";
+    const n=lastNum();if(n.includes("."))return;
     ex+=(n===""||n==="-")?"0.":".";
   }else if(isOp(k)){
     if(ex===""||ex==="-"){const last=lastResult();if(last===null)return;ex=numStr(last)}
+    if(L==="(")return;
     if(isOp(L))ex=ex.slice(0,-1);
     if(ex.endsWith("."))ex=ex.slice(0,-1);
     ex+=k;
+  }else if(k==="("){
+    if(/[\d.%)]/.test(L))ex+="×";
+    ex+="(";
+  }else if(k===")"){
+    if(opens()<=0||L==="("||isOp(L)||L==="-")return;
+    if(L===".")ex=ex.slice(0,-1);
+    ex+=")";
   }else if(k==="%"){
-    const n=lastNum();if(!n||n.endsWith("%")||n==="-")return;ex+="%";
+    const n=lastNum();if(!n||n==="-"||n.endsWith("%")||n.endsWith("."))return;ex+="%";
   }else if(k==="neg"){
     const n=lastNum();const base=ex.slice(0,ex.length-n.length);
+    if(L===")"||L==="%"&&!n)return;
     if(n==="")ex=base+"-";else ex=base+(n.startsWith("-")?n.slice(1):"-"+n);
   }else if(k==="bs"){ex=ex.slice(0,-1)}
   else if(k==="AC"){ex=""}
   else if(k==="="){
     if(!ex)return;
-    const r=evalStr(ex);if(!isFinite(r)){toast("Geçersiz işlem");return}
-    const t=tokens(ex);if(t.length<3){return}
+    const done=complete(ex);
+    const r=evalStr(done);if(!isFinite(r)){toast("Geçersiz işlem");return}
+    if(!/[+−×÷%]/.test(done.replace(/^-/,""))&&!done.includes("("))return;
     const id="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-    DATA[id]={expr:display(isOp(ex.slice(-1))?ex.slice(0,-1):ex),result:r,at:Date.now(),note:pendingNote,u:Date.now()};
+    DATA[id]={expr:display(done),result:r,at:Date.now(),note:pendingNote,u:Date.now()};
     pendingNote="";ex="";save();renderTape(true);
   }
-  else if(k==="menu")return settings();
-  else if(k==="trash")return clearAll();
   else if(k==="list")return listView();
   LSs("calc_cur",ex);renderCur();
 }
 function numStr(n){return String(Math.round(n*1e10)/1e10)}
 function lastResult(){const L=items();return L.length?L[L.length-1].result:null}
-document.getElementById("keys").addEventListener("click",e=>{const b=e.target.closest(".k");if(b){press(b.dataset.k);if(navigator.vibrate)navigator.vibrate(5)}});
+document.getElementById("keys").addEventListener("click",e=>{const b=e.target.closest(".k");if(b)press(b.dataset.k)});
 document.addEventListener("keydown",e=>{
   if(document.querySelector(".ov"))return;
-  const m={"*":"×","x":"×","/":"÷","-":"−","+":"+","Enter":"=","=":"=",".":".",",":".","%":"%","Backspace":"bs","Escape":"AC","Delete":"AC"};
+  const m={"*":"×","x":"×","/":"÷","-":"−","+":"+","Enter":"=","=":"=",".":".",",":".","%":"%","(":"(",")":")","Backspace":"bs","Escape":"AC","Delete":"AC"};
   const k=/^\d$/.test(e.key)?e.key:m[e.key];if(!k)return;e.preventDefault();press(k);
 });
 
@@ -208,29 +242,35 @@ function renderTape(scroll){
   const today=dayKey(Date.now());
   L.forEach(x=>{const dk=dayKey(x.at);if(dk!==last){if(last!==""||dk!==today)h+=`<div class="day">${dk===today?"Bugün":dayLbl(x.at)}</div>`;last=dk}
     h+=`<div class="ln" data-id="${x.id}"><span class="e">${esc(x.expr)}=</span><span class="r">${esc(fmtNum(x.result))}</span>${x.note?`<span class="n">${esc(x.note)}</span>`:""}</div>`});
+  if(!L.length)h+='<div class="hint">Hesapların burada tarih sırasıyla birikir. Satıra dokunarak not ekleyebilirsin.</div>';
+  if(!tok())h+='<button class="hint btn-sync" id="hs">Senkronu bağla → Mac ve iPhone geçmişi birleşsin</button>';
   const tp=$("#tape");const atBottom=tp.scrollHeight-tp.scrollTop-tp.clientHeight<60;
   tp.innerHTML=h;if(scroll||atBottom)tp.scrollTop=tp.scrollHeight;
 }
 function fit(){const m=$("#main");let fs=86;m.style.fontSize=fs+"px";const W=m.clientWidth;while(m.scrollWidth>W&&fs>30){fs-=2;m.style.fontSize=fs+"px"}}
 function renderCur(){
   $("#main").textContent=ex?display(ex):"0";
-  const t=tokens(ex);let pv="";
-  if(t.length>=2){const r=evalStr(ex);if(isFinite(r))pv=fmtNum(r)}
+  let pv="";
+  if(/[+−×÷%(]/.test(ex.replace(/^-/,""))){const r=evalStr(ex);if(isFinite(r))pv=fmtNum(r)}
   $("#prev").innerHTML=esc(pv)+(pendingNote?` <span class="note-chip">✎ ${esc(pendingNote)}</span>`:"");
   const L=ex.slice(-1);document.querySelectorAll(".k.o").forEach(b=>b.classList.toggle("on",b.dataset.k===L));
   $("[data-k=AC]").textContent=ex?"C":"AC";
   fit();
 }
-$("#tape").addEventListener("click",e=>{const l=e.target.closest(".ln");if(l)itemSheet(l.dataset.id)});
+$("#tape").addEventListener("click",e=>{if(e.target.closest("#hs"))return settings();const l=e.target.closest(".ln");if(l)itemSheet(l.dataset.id)});
 window.addEventListener("resize",fit);
+(()=>{const m=document.querySelector(".cur");let x0=null,lp=null;
+ m.addEventListener("touchstart",e=>{x0=e.touches[0].clientX;lp=setTimeout(()=>{lp=null;const r=ex?evalStr(ex):lastResult();if(r!=null&&isFinite(r)&&navigator.clipboard)navigator.clipboard.writeText(numStr(r)).then(()=>toast("Kopyalandı")).catch(()=>{})},550)},{passive:true});
+ m.addEventListener("touchmove",e=>{if(x0!==null&&Math.abs(e.touches[0].clientX-x0)>40){clearTimeout(lp);lp=null;press("bs");x0=e.touches[0].clientX}},{passive:true});
+ m.addEventListener("touchend",()=>{clearTimeout(lp);x0=null});})();
 
 /* ===== sheets ===== */
-function overlay(html){const o=document.createElement("div");o.className="ov";o.innerHTML=`<div class="sheet">${html}</div>`;o.addEventListener("click",e=>{if(e.target===o)o.remove()});document.body.appendChild(o);return o}
+function overlay(html){const o=document.createElement("div");o.className="ov";o.innerHTML=`<div class="sheet"><div class="grabber"></div>${html}</div>`;o.addEventListener("click",e=>{if(e.target===o)o.remove()});document.body.appendChild(o);return o}
 function itemSheet(id){
   const x=DATA[id];if(!x)return;
   const o=overlay(`<h3>${esc(x.expr)} = ${esc(fmtNum(x.result))}</h3><p>${new Date(x.at).toLocaleString("tr-TR",{dateStyle:"long",timeStyle:"short"})}</p><textarea id="nt" placeholder="Not ekle (ör. Kira + aidat)">${esc(x.note||"")}</textarea><div class="row"><button class="btn" id="use">Sonucu kullan</button><button class="btn pri" id="sv">Kaydet</button></div><div class="row"><button class="btn red" id="dl">Bu işlemi sil</button><button class="btn" id="cp">Kopyala</button></div>`);
   o.querySelector("#sv").onclick=()=>{x.note=o.querySelector("#nt").value.trim();x.u=Date.now();save();renderTape();o.remove()};
-  o.querySelector("#use").onclick=()=>{const L=ex.slice(-1);if(ex&&!isOp(L))ex+="+";ex+=numStr(x.result);renderCur();o.remove()};
+  o.querySelector("#use").onclick=()=>{const L=ex.slice(-1);if(ex&&!isOp(L)&&L!=="(")ex+="+";ex+=numStr(x.result);LSs("calc_cur",ex);renderCur();o.remove()};
   o.querySelector("#dl").onclick=()=>{x.del=true;x.u=Date.now();save();renderTape();o.remove()};
   o.querySelector("#cp").onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(numStr(x.result)).then(()=>toast("Kopyalandı"));o.remove()};
 }
@@ -241,18 +281,20 @@ function clearAll(){
   o.querySelector("#ok").onclick=()=>{const t=Date.now();Object.values(DATA).forEach(v=>{if(!v.del){v.del=true;v.u=t}});save();renderTape();o.remove()};
 }
 function listView(){
-  const o=overlay(`<h3>Geçmiş ve notlar</h3><input id="lq" type="search" placeholder="İşlem, sonuç veya notta ara"><div class="row"><button class="btn" id="nn">${pendingNote?"Sonraki not: "+esc(pendingNote.slice(0,18)):"Sonraki işleme not ekle"}</button></div><div id="lw"></div>`);
+  const o=overlay(`<h3>Geçmiş ve notlar</h3><button class="sync" id="sst" data-s="${SYNC.s}" style="align-self:center"><i></i><span>${esc(SYNC.t)}</span></button><input id="lq" type="search" placeholder="İşlem, sonuç veya notta ara"><div class="row"><button class="btn" id="nn">${pendingNote?"Not: "+esc(pendingNote.slice(0,16)):"Sonraki işleme not"}</button><button class="btn" id="st">Senkron</button></div><div id="lw"></div><button class="btn red" id="clr">Geçmişi temizle</button>`);
   const draw=()=>{const q=o.querySelector("#lq").value.toLocaleLowerCase("tr");const L=items().reverse().filter(x=>!q||(x.expr+" "+fmtNum(x.result)+" "+(x.note||"")).toLocaleLowerCase("tr").includes(q));
     let h="",last="";L.forEach(x=>{const dk=dayLbl(x.at);if(dk!==last){if(last)h+="</div>";h+=`<div class="hd">${dk}</div><div class="hl">`;last=dk}
       h+=`<div class="hi" data-id="${x.id}"><div class="e">${esc(x.expr)} =</div><div class="r">${esc(fmtNum(x.result))}</div><div class="t">${new Date(x.at).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})}</div><div></div>${x.note?`<div class="nn">${esc(x.note)}</div>`:""}</div>`});
     if(last)h+="</div>";o.querySelector("#lw").innerHTML=h||'<p style="text-align:center;padding:20px">Kayıt yok</p>'};
   draw();o.querySelector("#lq").oninput=draw;
+  o.querySelector("#st").onclick=o.querySelector("#sst").onclick=()=>{o.remove();settings()};
+  o.querySelector("#clr").onclick=()=>{o.remove();clearAll()};
   o.querySelector("#lw").onclick=e=>{const i=e.target.closest(".hi");if(i){o.remove();itemSheet(i.dataset.id)}};
   o.querySelector("#nn").onclick=()=>{o.remove();const p=overlay(`<h3>Sonraki işleme not</h3><p>= tuşuna bastığında bu not o işleme eklenir.</p><input id="pn" value="${esc(pendingNote)}" placeholder="ör. Aralık kirası"><div class="row"><button class="btn" id="x">Temizle</button><button class="btn pri" id="s">Tamam</button></div>`);setTimeout(()=>p.querySelector("#pn").focus(),300);p.querySelector("#s").onclick=()=>{pendingNote=p.querySelector("#pn").value.trim();renderCur();p.remove()};p.querySelector("#x").onclick=()=>{pendingNote="";renderCur();p.remove()}};
 }
 function settings(){
   const has=!!tok();
-  const o=overlay(`<h3>Hesap Makinesi Gold</h3><div class="sync" id="sst" data-s="${SYNC.s}"><i></i><span>${esc(SYNC.t)}</span></div><p>Mac ve iPhone arasında senkron, GitHub hesabındaki gizli bir Gist (hesap.json) üzerinden çalışır. İzlerim'de kayıtlı anahtar varsa otomatik kullanılır.</p>${has?"":`<input id="tk" type="password" placeholder="GitHub token (gist yetkili)" autocomplete="off">`}<div class="row">${has?`<button class="btn red" id="out">Anahtarı kaldır</button>`:`<button class="btn pri" id="in">Bağla</button>`}<button class="btn" id="now">Şimdi senkronla</button></div><p>${items().length} işlem · bu cihazda kayıtlı</p>`);
+  const o=overlay(`<h3>Hesap Makinesi Gold</h3><div class="sync" id="sst" data-s="${SYNC.s}"><i></i><span>${esc(SYNC.t)}</span></div><p>Mac ve iPhone arasında senkron, GitHub hesabındaki gizli bir Gist (hesap.json) üzerinden çalışır. Ana ekrandaki uygulama Safari'den ayrı hafıza kullanır; anahtarı burada bir kez girmen gerekir.</p>${has?"":`<input id="tk" type="password" placeholder="GitHub token (gist yetkili)" autocomplete="off">`}<div class="row">${has?`<button class="btn red" id="out">Anahtarı kaldır</button>`:`<button class="btn pri" id="in">Bağla</button>`}<button class="btn" id="now">Şimdi senkronla</button></div><p>${items().length} işlem · bu cihazda kayıtlı</p>`);
   if(!has)o.querySelector("#in").onclick=()=>{const v=o.querySelector("#tk").value.trim();if(!v)return;LS("gh_token",v);o.remove();syncNow()};
   else o.querySelector("#out").onclick=()=>{LSs("gh_token",null);LSs("calc_gist",null);o.remove();setSync("off","Senkron kapalı")};
   o.querySelector("#now").onclick=()=>{o.remove();syncNow()};
