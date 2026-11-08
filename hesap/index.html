@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Hesap">
+<title>Hesap</title>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23000'/%3E%3Ccircle cx='60' cy='60' r='30' fill='%23fff'/%3E%3Ccircle cx='120' cy='60' r='30' fill='%23e2963a'/%3E%3Ccircle cx='60' cy='120' r='30' fill='%23333'/%3E%3Ccircle cx='120' cy='120' r='30' fill='%23e2963a'/%3E%3C/svg%3E">
+<style>
+:root{--or:#e2963a;--dk:#333335;--g:#9b9b9f;--w:#f2f2f2;--yl:#ffd60a;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{margin:0;height:100%;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Helvetica Neue",system-ui,sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior:none;touch-action:manipulation}
+button,input,textarea{font:inherit;color:inherit}button{border:0;background:none;cursor:pointer;padding:0}
+.app{height:100dvh;max-width:460px;margin:0 auto;display:flex;flex-direction:column;padding:env(safe-area-inset-top) 0 calc(10px + env(safe-area-inset-bottom))}
+/* tape */
+.tape{flex:1;overflow-y:auto;padding:12px 14px 4px;display:flex;flex-direction:column;font-variant-numeric:tabular-nums;scrollbar-width:none;mask-image:linear-gradient(to bottom,transparent,#000 40px)}
+.tape::-webkit-scrollbar{display:none}
+.tape .sp{flex:1}
+.ln{text-align:right;font-size:clamp(24px,7.6vw,34px);line-height:1.22;padding:5px 0;word-break:break-all;cursor:pointer;border-radius:8px}
+.ln:active{background:#111}
+.ln .e{color:var(--g)}.ln .r{color:var(--w)}
+.ln .n{display:block;font-size:15px;color:var(--yl);line-height:1.3;margin-top:1px;word-break:break-word}
+.day{text-align:right;color:var(--or);font-size:clamp(24px,7.6vw,34px);font-weight:500;padding:12px 0 6px}
+/* current */
+.cur{padding:0 14px 8px;text-align:right}
+.prev{font-size:clamp(30px,9.6vw,44px);color:var(--w);min-height:1.2em;line-height:1.2;font-variant-numeric:tabular-nums}
+.main{font-size:86px;line-height:1.08;white-space:nowrap;font-weight:400;letter-spacing:-.02em;font-variant-numeric:tabular-nums;overflow:hidden}
+.note-chip{display:inline-block;margin-top:4px;font-size:15px;color:var(--yl)}
+/* keys */
+.keys{display:grid;grid-template-columns:repeat(5,1fr);gap:min(2.6vw,12px);padding:4px min(2.8vw,13px) 0}
+.k{aspect-ratio:1;border-radius:50%;display:grid;place-items:center;font-size:clamp(28px,9vw,40px);transition:filter .12s,transform .12s;touch-action:manipulation}
+.k:active{filter:brightness(1.35);transform:scale(.96)}
+.k.d{background:var(--dk);color:#fff;font-size:clamp(24px,7.6vw,34px)}
+.k.n{background:#fff;color:#000}
+.k.o{background:var(--or);color:#fff;font-size:clamp(32px,10vw,46px)}
+.k.o.on{background:#fff;color:var(--or)}
+.k.z{grid-column:span 2;aspect-ratio:auto;border-radius:999px}
+.k.eq{grid-row:span 2;aspect-ratio:auto;border-radius:999px;background:var(--or);color:#fff;font-size:clamp(36px,11vw,50px)}
+.k svg{width:38%;height:38%}
+.k.d svg{color:#fff}.k.d.mut svg{color:#8e8e93}
+/* sheets */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;z-index:20;animation:fd .2s}
+@keyframes fd{from{opacity:0}}
+.sheet{width:100%;max-width:460px;max-height:88dvh;overflow:auto;background:#1c1c1e;border-radius:16px 16px 0 0;padding:16px 16px calc(18px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:10px;animation:up .35s cubic-bezier(.32,.72,0,1)}
+@keyframes up{from{transform:translateY(100%)}}
+.sheet *{-webkit-user-select:text;user-select:text}
+.sheet h3{margin:0;font-size:20px;font-weight:700}
+.sheet p{margin:0;color:#98989f;font-size:14px;line-height:1.45}
+.sheet input,.sheet textarea{width:100%;border:0;outline:none;background:rgba(118,118,128,.24);border-radius:10px;padding:11px 12px;font-size:16px}
+.sheet textarea{min-height:90px;resize:none}
+.row{display:flex;gap:8px}
+.btn{flex:1;height:46px;border-radius:12px;background:rgba(118,118,128,.24);color:#0a84ff;font-weight:600;font-size:16px}
+.btn.pri{background:#0a84ff;color:#fff}.btn.red{color:#ff453a}
+.hl{display:flex;flex-direction:column;background:#2c2c2e;border-radius:12px;overflow:hidden}
+.hi{padding:10px 12px;border-top:.5px solid #3a3a3c;display:grid;grid-template-columns:1fr auto;gap:2px 10px;cursor:pointer}
+.hi:first-child{border:0}
+.hi .e{color:#98989f;font-size:14px;word-break:break-all}.hi .r{font-size:18px;text-align:right}
+.hi .t{font-size:12px;color:#636366}.hi .nn{grid-column:1/-1;color:var(--yl);font-size:14px}
+.hd{font-size:13px;color:var(--or);font-weight:600;margin:6px 2px 0}
+.sync{font-size:13px;color:#98989f;display:flex;align-items:center;gap:6px}
+.sync i{width:8px;height:8px;border-radius:50%;background:#636366}.sync[data-s=ok] i{background:#30d158}.sync[data-s=run] i{background:#ffd60a}.sync[data-s=err] i{background:#ff453a}
+.toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%);background:rgba(44,44,46,.95);padding:9px 15px;border-radius:14px;font-size:14px;z-index:30}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tape" id="tape"><div class="sp"></div></div>
+  <div class="cur">
+    <div class="prev" id="prev"></div>
+    <div class="main" id="main">0</div>
+  </div>
+  <div class="keys" id="keys">
+    <button class="k d" data-k="AC">AC</button>
+    <button class="k d" data-k="neg">+/−</button>
+    <button class="k d" data-k="%">%</button>
+    <button class="k d" data-k="bs" aria-label="Sil"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H5M11 5l-7 7 7 7"/></svg></button>
+    <button class="k d mut" data-k="menu" aria-label="Ayarlar"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="5" r="2.3"/><circle cx="12" cy="5" r="2.3"/><circle cx="19" cy="5" r="2.3"/><circle cx="5" cy="12" r="2.3"/><circle cx="12" cy="12" r="2.3"/><circle cx="19" cy="12" r="2.3"/><circle cx="5" cy="19" r="2.3"/><circle cx="12" cy="19" r="2.3"/><circle cx="19" cy="19" r="2.3"/></svg></button>
+    <button class="k n" data-k="7">7</button><button class="k n" data-k="8">8</button><button class="k n" data-k="9">9</button>
+    <button class="k o" data-k="÷">÷</button>
+    <button class="k d mut" data-k="trash" aria-label="Geçmişi temizle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M9 6V4h6v2M6 6l1 14h10l1-14M10 10v7M14 10v7"/></svg></button>
+    <button class="k n" data-k="4">4</button><button class="k n" data-k="5">5</button><button class="k n" data-k="6">6</button>
+    <button class="k o" data-k="×">×</button>
+    <button class="k d mut" data-k="list" aria-label="Geçmiş ve notlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4" cy="6" r="1.2" fill="currentColor"/><circle cx="4" cy="12" r="1.2" fill="currentColor"/><circle cx="4" cy="18" r="1.2" fill="currentColor"/></svg></button>
+    <button class="k n" data-k="1">1</button><button class="k n" data-k="2">2</button><button class="k n" data-k="3">3</button>
+    <button class="k o" data-k="−">−</button>
+    <button class="k eq" data-k="=">=</button>
+    <button class="k n z" data-k="0">0</button><button class="k n" data-k=".">.</button>
+    <button class="k o" data-k="+">+</button>
+  </div>
+</div>
+<script>
+/* ===== storage ===== */
+const LS=(k,v)=>{try{if(v===undefined){const s=localStorage.getItem(k);return s?JSON.parse(s):null}localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}};
+const LSs=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);v===null?localStorage.removeItem(k):localStorage.setItem(k,v)}catch(e){return null}};
+let DATA=LS("calc_items")||{};   // id -> {expr,result,at,note,u,del}
+let ex=LSs("calc_cur")||"";      // current expression, e.g. "4455+455+"
+let pendingNote="";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function toast(t){const d=document.createElement("div");d.className="toast";d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}
+function save(){LS("calc_items",DATA);LSs("calc_cur",ex);queueSync()}
+
+/* ===== math ===== */
+const OPS="+−×÷";
+const isOp=c=>OPS.includes(c);
+function fmtNum(n){
+  if(!isFinite(n))return"Hata";
+  const r=Math.round(n*1e10)/1e10, a=Math.abs(r);
+  if(a!==0&&(a>=1e16||a<1e-10))return r.toExponential(6);
+  return r.toLocaleString("en-US",{maximumFractionDigits:10});
+}
+function fmtTyped(s){ // keep what user typed, add grouping
+  const neg=s.startsWith("-");if(neg)s=s.slice(1);
+  let [i,d]=s.split(".");i=i||"0";
+  i=i.replace(/^0+(?=\d)/,"").replace(/\B(?=(\d{3})+(?!\d))/g,",");
+  return (neg?"-":"")+i+(d!==undefined?"."+d:"");
+}
+function tokens(s){ // -> [num, op, num, ...]; numbers may end with %
+  const t=[];let num="";
+  for(let i=0;i<s.length;i++){const c=s[i];
+    if(isOp(c)&&num!==""&&num!=="-"){t.push(num);t.push(c);num=""}
+    else num+=c;}
+  if(num!=="")t.push(num);return t;
+}
+function evalTokens(t){
+  if(t.length&&isOp(t[t.length-1]))t=t.slice(0,-1);
+  if(!t.length)return NaN;
+  // resolve percents left-to-right (iOS rule: a+b% = a+a*b/100)
+  const v=[];
+  for(let i=0;i<t.length;i++){
+    if(i%2){v.push(t[i]);continue}
+    let s=t[i],p=s.endsWith("%");if(p)s=s.slice(0,-1);
+    let n=parseFloat(s);if(isNaN(n))return NaN;
+    if(p){const op=v[v.length-1];if(op==="+"||op==="−"){n=evalNums(v.slice(0,-1))*n/100}else n=n/100}
+    v.push(n);
+  }
+  return evalNums(v);
+}
+function evalNums(v){
+  const w=v.slice();
+  for(let i=1;i<w.length;i+=2)if(w[i]==="×"||w[i]==="÷"){const r=w[i]==="×"?w[i-1]*w[i+1]:w[i-1]/w[i+1];w.splice(i-1,3,r);i-=2}
+  let r=w[0];for(let i=1;i<w.length;i+=2)r=w[i]==="+"?r+w[i+1]:r-w[i+1];
+  return r;
+}
+const evalStr=s=>evalTokens(tokens(s));
+function display(s){return tokens(s).map((x,i)=>i%2?x:(x.endsWith("%")?fmtTyped(x.slice(0,-1))+"%":fmtTyped(x))).join("")}
+
+/* ===== input ===== */
+function lastNum(){const t=tokens(ex);return t.length&&!isOp(t[t.length-1])?t[t.length-1]:""}
+function press(k){
+  const L=ex.slice(-1);
+  if(/^\d$/.test(k)){
+    if(L==="%")ex+="×";
+    const n=lastNum();
+    if(n.replace(/[^\d]/g,"").length>=16)return;
+    if(n==="0")ex=ex.slice(0,-1);else if(n==="-0")ex=ex.slice(0,-1);
+    ex+=k;
+  }else if(k==="."){
+    const n=lastNum();if(n.includes(".")||n.endsWith("%"))return;
+    ex+=(n===""||n==="-")?"0.":".";
+  }else if(isOp(k)){
+    if(ex===""||ex==="-"){const last=lastResult();if(last===null)return;ex=numStr(last)}
+    if(isOp(L))ex=ex.slice(0,-1);
+    if(ex.endsWith("."))ex=ex.slice(0,-1);
+    ex+=k;
+  }else if(k==="%"){
+    const n=lastNum();if(!n||n.endsWith("%")||n==="-")return;ex+="%";
+  }else if(k==="neg"){
+    const n=lastNum();const base=ex.slice(0,ex.length-n.length);
+    if(n==="")ex=base+"-";else ex=base+(n.startsWith("-")?n.slice(1):"-"+n);
+  }else if(k==="bs"){ex=ex.slice(0,-1)}
+  else if(k==="AC"){ex=""}
+  else if(k==="="){
+    if(!ex)return;
+    const r=evalStr(ex);if(!isFinite(r)){toast("Geçersiz işlem");return}
+    const t=tokens(ex);if(t.length<3){return}
+    const id="c"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+    DATA[id]={expr:display(isOp(ex.slice(-1))?ex.slice(0,-1):ex),result:r,at:Date.now(),note:pendingNote,u:Date.now()};
+    pendingNote="";ex="";save();renderTape(true);
+  }
+  else if(k==="menu")return settings();
+  else if(k==="trash")return clearAll();
+  else if(k==="list")return listView();
+  LSs("calc_cur",ex);renderCur();
+}
+function numStr(n){return String(Math.round(n*1e10)/1e10)}
+function lastResult(){const L=items();return L.length?L[L.length-1].result:null}
+document.getElementById("keys").addEventListener("click",e=>{const b=e.target.closest(".k");if(b){press(b.dataset.k);if(navigator.vibrate)navigator.vibrate(5)}});
+document.addEventListener("keydown",e=>{
+  if(document.querySelector(".ov"))return;
+  const m={"*":"×","x":"×","/":"÷","-":"−","+":"+","Enter":"=","=":"=",".":".",",":".","%":"%","Backspace":"bs","Escape":"AC","Delete":"AC"};
+  const k=/^\d$/.test(e.key)?e.key:m[e.key];if(!k)return;e.preventDefault();press(k);
+});
+
+/* ===== render ===== */
+function items(){return Object.entries(DATA).filter(([,v])=>!v.del).map(([id,v])=>({id,...v})).sort((a,b)=>a.at-b.at)}
+const dayKey=t=>{const d=new Date(t);return d.getFullYear()+"-"+d.getMonth()+"-"+d.getDate()};
+const dayLbl=t=>{const d=new Date(t),n=new Date();let s=String(d.getDate()).padStart(2,"0")+" "+d.toLocaleDateString("tr-TR",{month:"short"}).replace(".","");if(d.getFullYear()!==n.getFullYear())s+=" "+d.getFullYear();return s};
+function renderTape(scroll){
+  const L=items();let h='<div class="sp"></div>',last="";
+  const today=dayKey(Date.now());
+  L.forEach(x=>{const dk=dayKey(x.at);if(dk!==last){if(last!==""||dk!==today)h+=`<div class="day">${dk===today?"Bugün":dayLbl(x.at)}</div>`;last=dk}
+    h+=`<div class="ln" data-id="${x.id}"><span class="e">${esc(x.expr)}=</span><span class="r">${esc(fmtNum(x.result))}</span>${x.note?`<span class="n">${esc(x.note)}</span>`:""}</div>`});
+  const tp=$("#tape");const atBottom=tp.scrollHeight-tp.scrollTop-tp.clientHeight<60;
+  tp.innerHTML=h;if(scroll||atBottom)tp.scrollTop=tp.scrollHeight;
+}
+function fit(){const m=$("#main");let fs=86;m.style.fontSize=fs+"px";const W=m.clientWidth;while(m.scrollWidth>W&&fs>30){fs-=2;m.style.fontSize=fs+"px"}}
+function renderCur(){
+  $("#main").textContent=ex?display(ex):"0";
+  const t=tokens(ex);let pv="";
+  if(t.length>=2){const r=evalStr(ex);if(isFinite(r))pv=fmtNum(r)}
+  $("#prev").innerHTML=esc(pv)+(pendingNote?` <span class="note-chip">✎ ${esc(pendingNote)}</span>`:"");
+  const L=ex.slice(-1);document.querySelectorAll(".k.o").forEach(b=>b.classList.toggle("on",b.dataset.k===L));
+  $("[data-k=AC]").textContent=ex?"C":"AC";
+  fit();
+}
+$("#tape").addEventListener("click",e=>{const l=e.target.closest(".ln");if(l)itemSheet(l.dataset.id)});
+window.addEventListener("resize",fit);
+
+/* ===== sheets ===== */
+function overlay(html){const o=document.createElement("div");o.className="ov";o.innerHTML=`<div class="sheet">${html}</div>`;o.addEventListener("click",e=>{if(e.target===o)o.remove()});document.body.appendChild(o);return o}
+function itemSheet(id){
+  const x=DATA[id];if(!x)return;
+  const o=overlay(`<h3>${esc(x.expr)} = ${esc(fmtNum(x.result))}</h3><p>${new Date(x.at).toLocaleString("tr-TR",{dateStyle:"long",timeStyle:"short"})}</p><textarea id="nt" placeholder="Not ekle (ör. Kira + aidat)">${esc(x.note||"")}</textarea><div class="row"><button class="btn" id="use">Sonucu kullan</button><button class="btn pri" id="sv">Kaydet</button></div><div class="row"><button class="btn red" id="dl">Bu işlemi sil</button><button class="btn" id="cp">Kopyala</button></div>`);
+  o.querySelector("#sv").onclick=()=>{x.note=o.querySelector("#nt").value.trim();x.u=Date.now();save();renderTape();o.remove()};
+  o.querySelector("#use").onclick=()=>{const L=ex.slice(-1);if(ex&&!isOp(L))ex+="+";ex+=numStr(x.result);renderCur();o.remove()};
+  o.querySelector("#dl").onclick=()=>{x.del=true;x.u=Date.now();save();renderTape();o.remove()};
+  o.querySelector("#cp").onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(numStr(x.result)).then(()=>toast("Kopyalandı"));o.remove()};
+}
+function clearAll(){
+  const n=items().length;if(!n)return toast("Geçmiş zaten boş");
+  const o=overlay(`<h3>Geçmişi temizle</h3><p>${n} işlem ve notları silinecek. Bu işlem tüm cihazlarda geçerli olur.</p><div class="row"><button class="btn" id="no">Vazgeç</button><button class="btn red" id="ok">Hepsini sil</button></div>`);
+  o.querySelector("#no").onclick=()=>o.remove();
+  o.querySelector("#ok").onclick=()=>{const t=Date.now();Object.values(DATA).forEach(v=>{if(!v.del){v.del=true;v.u=t}});save();renderTape();o.remove()};
+}
+function listView(){
+  const o=overlay(`<h3>Geçmiş ve notlar</h3><input id="lq" type="search" placeholder="İşlem, sonuç veya notta ara"><div class="row"><button class="btn" id="nn">${pendingNote?"Sonraki not: "+esc(pendingNote.slice(0,18)):"Sonraki işleme not ekle"}</button></div><div id="lw"></div>`);
+  const draw=()=>{const q=o.querySelector("#lq").value.toLocaleLowerCase("tr");const L=items().reverse().filter(x=>!q||(x.expr+" "+fmtNum(x.result)+" "+(x.note||"")).toLocaleLowerCase("tr").includes(q));
+    let h="",last="";L.forEach(x=>{const dk=dayLbl(x.at);if(dk!==last){if(last)h+="</div>";h+=`<div class="hd">${dk}</div><div class="hl">`;last=dk}
+      h+=`<div class="hi" data-id="${x.id}"><div class="e">${esc(x.expr)} =</div><div class="r">${esc(fmtNum(x.result))}</div><div class="t">${new Date(x.at).toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"})}</div><div></div>${x.note?`<div class="nn">${esc(x.note)}</div>`:""}</div>`});
+    if(last)h+="</div>";o.querySelector("#lw").innerHTML=h||'<p style="text-align:center;padding:20px">Kayıt yok</p>'};
+  draw();o.querySelector("#lq").oninput=draw;
+  o.querySelector("#lw").onclick=e=>{const i=e.target.closest(".hi");if(i){o.remove();itemSheet(i.dataset.id)}};
+  o.querySelector("#nn").onclick=()=>{o.remove();const p=overlay(`<h3>Sonraki işleme not</h3><p>= tuşuna bastığında bu not o işleme eklenir.</p><input id="pn" value="${esc(pendingNote)}" placeholder="ör. Aralık kirası"><div class="row"><button class="btn" id="x">Temizle</button><button class="btn pri" id="s">Tamam</button></div>`);setTimeout(()=>p.querySelector("#pn").focus(),300);p.querySelector("#s").onclick=()=>{pendingNote=p.querySelector("#pn").value.trim();renderCur();p.remove()};p.querySelector("#x").onclick=()=>{pendingNote="";renderCur();p.remove()}};
+}
+function settings(){
+  const has=!!LSs("gh_token");
+  const o=overlay(`<h3>Senkron</h3><div class="sync" id="sst" data-s="${SYNC.s}"><i></i><span>${esc(SYNC.t)}</span></div><p>Mac ve iPhone arasında senkron, GitHub hesabındaki gizli bir Gist (hesap.json) üzerinden çalışır. İzlerim'de kayıtlı anahtar varsa otomatik kullanılır.</p>${has?"":`<input id="tk" type="password" placeholder="GitHub token (gist yetkili)" autocomplete="off">`}<div class="row">${has?`<button class="btn red" id="out">Anahtarı kaldır</button>`:`<button class="btn pri" id="in">Bağla</button>`}<button class="btn" id="now">Şimdi senkronla</button></div><p>${items().length} işlem · bu cihazda kayıtlı</p>`);
+  if(!has)o.querySelector("#in").onclick=()=>{const v=o.querySelector("#tk").value.trim();if(!v)return;LSs("gh_token",v);o.remove();syncNow()};
+  else o.querySelector("#out").onclick=()=>{LSs("gh_token",null);LSs("calc_gist",null);o.remove();setSync("off","Senkron kapalı")};
+  o.querySelector("#now").onclick=()=>{o.remove();syncNow()};
+}
+
+/* ===== Gist sync ===== */
+const SYNC={s:"off",t:"Senkron kapalı"};
+function setSync(s,t){SYNC.s=s;SYNC.t=t;const e=$("#sst");if(e){e.dataset.s=s;e.querySelector("span").textContent=t}}
+async function gh(path,opt={}){const r=await fetch("https://api.github.com"+path,{...opt,headers:{"Authorization":"Bearer "+LSs("gh_token"),"Accept":"application/vnd.github+json",...(opt.body?{"Content-Type":"application/json"}:{})},cache:"no-store"});if(!r.ok)throw new Error("GitHub "+r.status);return r.json()}
+async function gistId(){
+  let id=LSs("calc_gist");if(id)return id;
+  for(let p=1;p<=5;p++){const L=await gh("/gists?per_page=100&page="+p);const f=L.find(g=>g.files&&g.files["hesap.json"]);if(f){LSs("calc_gist",f.id);return f.id}if(L.length<100)break}
+  const g=await gh("/gists",{method:"POST",body:JSON.stringify({description:"Hesap uygulaması geçmişi",public:false,files:{"hesap.json":{content:JSON.stringify({items:DATA})}}})});
+  LSs("calc_gist",g.id);return g.id;
+}
+function merge(a,b){const o={...a};for(const[k,v]of Object.entries(b||{})){if(!o[k]||(v.u||0)>(o[k].u||0))o[k]=v}return o}
+let syncing=false,again=false,qt=null;
+function queueSync(){if(!LSs("gh_token"))return;clearTimeout(qt);qt=setTimeout(syncNow,2000)}
+async function syncNow(){
+  if(!LSs("gh_token")){setSync("off","Senkron kapalı");return}
+  if(syncing){again=true;return}syncing=true;setSync("run","Senkronlanıyor…");
+  try{
+    const id=await gistId();const g=await gh("/gists/"+id);
+    let remote={};const f=g.files["hesap.json"];
+    if(f){let c=f.content;if(f.truncated)c=await (await fetch(f.raw_url,{cache:"no-store"})).text();try{remote=JSON.parse(c).items||{}}catch(e){}}
+    const m=merge(DATA,remote);
+    const changedRemote=JSON.stringify(m)!==JSON.stringify(remote);
+    DATA=m;LS("calc_items",DATA);renderTape();
+    if(changedRemote)await gh("/gists/"+id,{method:"PATCH",body:JSON.stringify({files:{"hesap.json":{content:JSON.stringify({items:DATA})}}})});
+    setSync("ok","Senkron · "+new Date().toLocaleTimeString("tr-TR",{hour:"2-digit",minute:"2-digit"}));
+  }catch(e){setSync("err","Hata: "+e.message);if(/401/.test(e.message))toast("GitHub anahtarı geçersiz")}
+  syncing=false;if(again){again=false;syncNow()}
+}
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)syncNow()});
+
+renderTape(true);renderCur();syncNow();
+</script>
+</body>
+</html>
