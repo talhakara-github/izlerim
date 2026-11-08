@@ -8,6 +8,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="İzle">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,400,0..1,0&display=swap">
@@ -1227,6 +1230,33 @@ function showSync(){
 }
 
 
+
+/* ---------- Not Defteri'nden gelen liste (#ekle=...) ---------- */
+async function importFromHash(){
+  const m=location.hash.match(/^#ekle=([A-Za-z0-9_\-]+)/);if(!m)return;
+  try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}
+  let list;
+  try{let b=m[1].replace(/-/g,'+').replace(/_/g,'/');while(b.length%4)b+='=';list=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0))))}catch(e){toast('Gelen liste okunamadı');return}
+  if(!Array.isArray(list)||!list.length)return;
+  if(!KEY){toast('Önce TMDB anahtarını gir');return}
+  toast(list.length+' kayıt ekleniyor…');
+  let ok=0;const miss=[];
+  for(const it of list){
+    const t=it.k==='movie'?'movie':'tv';let q=String(it.t||'');const ym=q.match(/(19|20)\d{2}/);const y=ym?ym[0]:'';
+    q=q.replace(/\([^)]*\)/g,'').replace(/\s+/g,' ').trim();if(!q)continue;
+    try{
+      const p={query:q,include_adult:'false'};if(y)p[t==='tv'?'first_air_date_year':'year']=y;
+      let d=await api('/search/'+t,p);
+      if(!(d.results||[]).length){d=await api('/search/multi',{query:q,include_adult:'false'});d.results=(d.results||[]).filter(x=>x.media_type==='tv'||x.media_type==='movie')}
+      const x=(d.results||[])[0];if(!x){miss.push(it.t);continue}
+      const tt=x.media_type||t,k=tt+':'+x.id;
+      if(!(DATA[k]&&DATA[k].s))put(k,{s:4},metaOf(tt,x));ok++;
+    }catch(e){miss.push(it.t)}
+  }
+  try{strip();if(typeof renderList==='function'&&document.querySelector('#v-listem:not(.hide)'))renderList()}catch(e){}
+  toast(ok+' kayıt İzlenebilir’e eklendi'+(miss.length?' · bulunamadı: '+miss.slice(0,4).join(', '):''));
+}
+window.addEventListener('hashchange',importFromHash);
 /* ---------- Gömülü geçmişi bir kerede listeye işle ---------- */
 async function seedAll(force){
   if(!KEY||(!force&&LS('seeds_all_v1')))return;
@@ -1251,7 +1281,7 @@ async function seedAll(force){
 /* ---------- Başlat ---------- */
 chips();hidePaint();strip();
 if(KEY){loadGenres();reset()}else showKey();
-syncNow(true).then(()=>seedAll());
+syncNow(true).then(()=>seedAll()).then(()=>importFromHash());
 </script>
 <script>
 /* Presentation and accessibility enhancements. No storage schema or application logic changes. */
