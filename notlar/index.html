@@ -126,14 +126,41 @@ h2{margin:26px 0 8px;font-size:22px;font-weight:700;letter-spacing:.35px}
 .msg.a{background:var(--card);border-bottom-left-radius:6px}
 .toast{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top));transform:translateX(-50%);z-index:60;background:var(--card);color:var(--tx);padding:10px 16px;border-radius:14px;font-size:15px;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,.25);animation:vin .3s var(--ease)}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* büyüyen sohbet paneli */
+.scrim{position:fixed;inset:0;z-index:19;background:rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:opacity .3s}
+.dock.open~.scrim,.scrim.on{opacity:1;pointer-events:auto}
+.dock{padding-top:2px;border-radius:0;transition:border-radius .3s}
+.dock.open{border-radius:14px 14px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+.dgrab{display:flex;justify-content:center;align-items:center;width:100%;height:20px;touch-action:none}
+.dgrab span{width:36px;height:5px;border-radius:3px;background:var(--tx3)}
+.panel{display:grid;grid-template-rows:0fr;transition:grid-template-rows .42s var(--ease)}
+.panel>*{min-height:0;overflow:hidden}
+.dock.open .panel{grid-template-rows:auto 1fr}
+.panel .phead{display:none;align-items:center;justify-content:space-between;min-height:40px}
+.dock.open .panel .phead{display:flex}
+.phead b{font-size:17px;font-weight:600}
+.phead button{color:var(--blue);font-size:17px;min-height:40px;margin-left:16px}
+.log{display:none;flex-direction:column;gap:2px;overflow-y:auto!important;height:min(52dvh,560px);padding:6px 2px 10px}
+.dock.open .log{display:flex}
+.log .msg{font-size:17px;line-height:1.32;max-width:84%}
+.log .msg.a .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.log .msg.a .tags span{font-size:13px;background:var(--fill);padding:2px 8px;border-radius:999px;color:var(--tx2)}
+.log .msg .acts{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.log .msg.think{color:var(--tx2);font-style:italic}
+.log .hint{color:var(--tx2);text-align:center;font-size:15px;padding:24px 16px;line-height:1.4}
+.dock.open #replyBox{display:none}
+.dock.open .cmp textarea{min-height:72px;border-radius:16px}
 </style>
 </head>
 <body>
 <div class="app" id="app"></div>
-<div class="dock"><div class="in">
+<div class="scrim" id="scrim"></div>
+<div class="dock" id="dock"><div class="in">
+  <button class="dgrab" id="dgrab" aria-label="Sohbeti aç/kapat"><span></span></button>
+  <div class="panel" id="panel"><div class="phead"><b>Claude</b><div><button id="pclr">Temizle</button><button id="pclose">Kapat</button></div></div><div class="log" id="log"></div></div>
   <div id="replyBox"></div>
   <form class="cmp" id="form">
-    <button type="button" class="ib hist" id="histBtn" aria-label="Sohbet geçmişi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/></svg></button>
     <textarea id="inp" rows="1" placeholder="Claude'a yaz…" autocapitalize="sentences"></textarea>
     <button class="ib send" id="send" type="submit" aria-label="Gönder" disabled><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
   </form>
@@ -178,7 +205,7 @@ function renderHome(){
   <h1>Not Defteri</h1>
   <label class="search">${SEARCH}<input id="q" type="search" placeholder="Ara" value="${esc(Q)}"></label>
   ${Q?searchResults():`
-  <div class="smart">${card("today",I.today,"#007aff",today,"Bugün")}${card("all",I.all,"#636366",open.length,"Tümü")}${card("links",I.link,"#ff9500",links,"Linkler")}${card("done",I.done,"#8e8e93",done,"Tamamlanan")}</div>
+  <div class="smart">${card("today",I.today,"#007aff",today,"Bugün")}${card("all",I.all,"#636366",open.length,"Tümü")}</div>
   <h2>Listelerim</h2>
   <div class="group">${CATS.map(c=>`<button class="row" data-cat="${esc(c.id)}"><div class="lic" style="background:${colOf(c)}">${c.emoji}</div><span class="nm">${esc(c.name)}</span><span class="ct">${cnt[c.id]||0}</span>${CHEV}</button>`).join("")}</div>
   <div style="display:flex;justify-content:flex-end;margin-top:6px"><button class="act" id="addList" style="color:var(--blue);min-height:44px;font-size:17px">Liste Ekle</button></div>`}
@@ -274,11 +301,6 @@ function listSheet(c){
     await saveCats();o.remove();render()};
   const d=o.querySelector("#del");if(d)d.onclick=async()=>{CATS=CATS.filter(x=>x.id!==c.id);await saveCats();for(const n of NOTES.filter(n=>n.cat===c.id))await saveNote({...n,cat:"diger"});o.remove();VIEW={v:"home"};render()};
 }
-$("#histBtn").onclick=()=>{
-  const o=overlay(`<div class="shh"><span></span><b>Claude ile sohbet</b><button class="done" id="x">Kapat</button></div><div id="hl">${CHAT.length?CHAT.map(m=>`<div class="msg ${m.r}">${esc(m.t)}</div>`).join(""):'<div class="empty">Henüz sohbet yok</div>'}</div>${CHAT.length?'<button class="danger" id="clr" style="margin-top:16px">Sohbeti Temizle</button>':""}`);
-  o.querySelector("#x").onclick=()=>o.remove();const c=o.querySelector("#clr");if(c)c.onclick=()=>{CHAT=[];saveChat();o.remove()};
-  const s=o.querySelector(".sheet");s.scrollTop=s.scrollHeight;
-};
 
 /* ================= data (yerel + Gist) ================= */
 const LSj=(k,v)=>{try{if(v===undefined){const s=localStorage.getItem(k);if(s==null)return null;try{return JSON.parse(s)}catch(e){return s}}if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}};
@@ -408,14 +430,37 @@ function importHash(){
 
 /* ================= Claude ================= */
 const inp=$("#inp");
+inp.addEventListener("focus",()=>{if(!PANEL)setPanel(true)});
 inp.oninput=()=>{inp.style.height="auto";inp.style.height=Math.min(inp.scrollHeight,140)+"px";$("#send").disabled=!inp.value.trim()||busy};
 const TOUCH=matchMedia("(pointer:coarse)").matches;
 inp.setAttribute("enterkeyhint",TOUCH?"enter":"send");
 inp.onkeydown=e=>{if(!TOUCH&&e.key==="Enter"&&!e.shiftKey&&!e.isComposing){e.preventDefault();$("#form").requestSubmit()}};
 $("#form").onsubmit=e=>{e.preventDefault();const t=inp.value.trim();if(!t||busy)return;inp.value="";inp.oninput();ask(t)};
 function b64url(obj){const bytes=new TextEncoder().encode(JSON.stringify(obj));let s="";bytes.forEach(b=>s+=String.fromCharCode(b));return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")}
+let PANEL=false;
+function setPanel(o){PANEL=o;$("#dock").classList.toggle("open",o);$("#scrim").classList.toggle("on",o);if(o)renderLog()}
+function renderLog(){
+  const L=$("#log");if(!L)return;
+  let h=CHAT.length?"":'<div class="hint">Not yaz ya da yapıştır; Claude doğru listeye koysun.<br>Komut ver: “Pi projelerini Yazılım’a taşı”, “izleme listesini İzle’ye taşı ve buradan sil”.<br>Soru sor: “Alınacaklar neler?”</div>';
+  CHAT.forEach((m,i)=>{const last=i===CHAT.length-1&&m.r==="a"&&LAST&&!busy;
+    h+=`<div class="msg ${m.r}">${esc(m.t)}${last?'<div class="acts" id="lacts"></div>':""}</div>`});
+  if(!busy&&LAST&&!(CHAT.length&&CHAT[CHAT.length-1].r==="a"))h+=`<div class="msg a">${esc(LAST.text)}<div class="acts" id="lacts"></div></div>`;
+  if(busy)h+=`<div class="msg a think">${esc(LAST&&LAST.text||"Claude düşünüyor…")}</div>`;
+  L.innerHTML=h;
+  const acts=$("#lacts");if(acts&&LAST)(LAST.buttons||[]).forEach(b=>{const el=document.createElement(b.href?"a":"button");el.className="pill"+(b.secondary?" sec2":"");el.textContent=b.label;if(b.href){el.href=b.href;el.target="_blank";el.rel="noopener"}el.addEventListener("click",()=>b.run&&b.run(el));acts.appendChild(el)});
+  L.scrollTop=L.scrollHeight;
+}
+$("#scrim").onclick=()=>setPanel(false);
+$("#pclose").onclick=()=>setPanel(false);
+$("#pclr").onclick=()=>{CHAT=[];LAST=null;saveChat();renderLog()};
+(()=>{const g=$("#dgrab");let y0=null,dy=0;
+ g.addEventListener("pointerdown",e=>{y0=e.clientY;dy=0;g.setPointerCapture(e.pointerId)});
+ g.addEventListener("pointermove",e=>{if(y0!==null)dy=e.clientY-y0});
+ const end=()=>{if(y0===null)return;if(Math.abs(dy)<6)setPanel(!PANEL);else if(dy<-30)setPanel(true);else if(dy>30)setPanel(false);y0=null};
+ g.addEventListener("pointerup",end);g.addEventListener("pointercancel",end);})();
 function showReply(r){
-  LAST=r;const box=$("#replyBox");
+  LAST=r;if(PANEL||busy){if(busy&&!PANEL)setPanel(true);renderLog()}
+  const box=$("#replyBox");
   if(!r){box.innerHTML=busy?'<div class="thinking">Claude düşünüyor…</div>':"";return}
   box.innerHTML=`<div class="reply"><div class="who"><span>Claude</span><button id="rx" aria-label="Kapat">✕</button></div><div>${esc(r.text)}</div>${r.tags&&r.tags.length?`<div class="tags">${r.tags.map(t=>`<span>${esc(t)}</span>`).join("")}</div>`:""}<div class="acts" id="racts"></div></div>`;
   $("#rx").onclick=()=>showReply(null);
@@ -476,7 +521,7 @@ SADECE şu JSON'u döndür:
   }catch(e){
     reply={text:"Claude hatası: "+(e&&(e.message||e.code)||"bilinmiyor"),buttons:/key|auth|401|invalid x-api/i.test(String(e&&e.message))?[{label:"Anahtarı kontrol et",run:()=>settings()}]:[]};
   }
-  busy=false;CHAT.push({r:"a",t:reply.text+(reply.tags&&reply.tags.length?"\n"+reply.tags.join(" · "):"")});saveChat();showReply(reply);render();$("#send").disabled=!inp.value.trim();
+  busy=false;CHAT.push({r:"a",t:reply.text+(reply.tags&&reply.tags.length?"\n"+reply.tags.join(" · "):"")});saveChat();showReply(reply);renderLog();render();$("#send").disabled=!inp.value.trim();
 }
 
 

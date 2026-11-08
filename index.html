@@ -396,6 +396,22 @@ a{color:var(--accent)}
 }
 @keyframes shUp{from{transform:translateY(100%)}to{transform:none}}
 @media(prefers-reduced-motion:reduce){.sheet{animation:none}.card:hover{transform:none}}
+
+/* ===== iPhone düzeni: içerik önce ===== */
+@media(max-width:700px){
+ .workspace-bar{display:none}
+ .view{padding-top:calc(10px + env(safe-area-inset-top,0px))}
+ .page-intro{gap:12px;padding:0;align-items:flex-end}
+ .page-intro .eyebrow,.page-intro p,.intro-mark{display:none}
+ .page-intro h1{font-size:34px;line-height:41px;letter-spacing:.37px;font-weight:700}
+ .catalog-heading>span{display:none}
+ .catalog-heading h2{font-size:22px}
+ header.top #setBtn{order:9}
+ #setBtn,nav.top button{min-height:48px;height:48px;padding:4px 2px 2px;justify-content:center;gap:3px;line-height:1.1}
+ #setBtn .settings-label{display:inline}
+ .dash{padding:16px}
+ .dash .mets{gap:14px 0}
+}
 </style>
 </head>
 <body>
@@ -438,7 +454,7 @@ a{color:var(--accent)}
     </div>
     <div class="search">
       <span class="ms">search</span>
-      <input id="q" aria-label="Dizi veya film ara" placeholder="Bir dizi, bir film, yeni bir hikâye ara…" autocomplete="off" enterkeyhint="search">
+      <input id="q" aria-label="Dizi veya film ara" placeholder="Dizi veya film ara" autocomplete="off" enterkeyhint="search">
       <span class="search-hint" aria-hidden="true">/</span>
       <span class="ms x hide" id="qx">close</span>
     </div>

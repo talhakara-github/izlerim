@@ -92,11 +92,28 @@ button,input,textarea{font:inherit;color:inherit}button{border:0;background:none
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .hint{text-align:right;color:#8e8e93;font-size:15px;padding:6px 0;line-height:1.4}.btn-sync{color:#d9a43f;align-self:flex-end;font-size:15px;padding:8px 0}
 .k.d{font-size:clamp(24px,7.4vw,32px)}
+
+/* tam ekran geçmiş */
+.app{position:relative}
+.grip{display:flex;justify-content:center;align-items:center;height:22px;width:100%;cursor:grab;touch-action:none}
+.grip span{width:40px;height:5px;border-radius:3px;background:#48484a;transition:background .2s,width .2s}
+.grip:active span{background:#8e8e93;width:52px}
+.fullbar{display:none;align-items:center;justify-content:space-between;padding:8px 16px 4px;min-height:44px}
+.fullbar b{font-size:20px;font-weight:600}
+.fullbar button{color:#d9a43f;font-size:17px;font-weight:600;min-height:44px;padding:0 4px}
+.cur,.keys{transition:transform .45s cubic-bezier(.32,.72,0,1),opacity .3s}
+.app.full .fullbar{display:flex}
+.app.full .cur,.app.full .keys{display:none}
+.app.full .tape{mask-image:none;padding-bottom:12px}
+.app.full .grip span{width:52px}
+.app.dragging .cur,.app.dragging .keys{transition:none}
 </style>
 </head>
 <body>
 <div class="app">
+  <div class="fullbar" id="fullbar"><b>Geçmiş</b><button id="fullDone">Bitti</button></div>
   <div class="tape" id="tape"><div class="sp"></div></div>
+  <button class="grip" id="grip" aria-label="Geçmişi tam ekran aç"><span></span></button>
   <div class="cur">
     <div class="prev" id="prev"></div>
     <div class="main" id="main">0</div>
@@ -259,6 +276,20 @@ function renderCur(){
 }
 $("#tape").addEventListener("click",e=>{if(e.target.closest("#hs"))return settings();const l=e.target.closest(".ln");if(l)itemSheet(l.dataset.id)});
 window.addEventListener("resize",fit);
+/* ===== tam ekran geçmiş: tutma çubuğunu aşağı çek ya da dokun ===== */
+(()=>{const app=document.querySelector(".app"),grip=$("#grip");let y0=null,dy=0;
+ const setFull=f=>{app.classList.toggle("full",f);grip.setAttribute("aria-label",f?"Geçmişi kapat":"Geçmişi tam ekran aç");if(!f){fit()}const tp=$("#tape");tp.scrollTop=tp.scrollHeight};
+ const move=v=>{document.querySelectorAll(".cur,.keys").forEach(el=>{el.style.transform=v?`translateY(${v}px)`:"";el.style.opacity=v?String(Math.max(.2,1-v/400)):""})};
+ grip.addEventListener("pointerdown",e=>{y0=e.clientY;dy=0;grip.setPointerCapture(e.pointerId);app.classList.add("dragging")});
+ grip.addEventListener("pointermove",e=>{if(y0===null)return;dy=e.clientY-y0;if(!app.classList.contains("full")&&dy>0)move(dy)});
+ const end=()=>{if(y0===null)return;app.classList.remove("dragging");const full=app.classList.contains("full");
+   if(Math.abs(dy)<6)setFull(!full);else if(!full&&dy>70)setFull(true);else if(full&&dy<-40)setFull(false);
+   move(0);y0=null};
+ grip.addEventListener("pointerup",end);grip.addEventListener("pointercancel",end);
+ $("#fullDone").onclick=()=>setFull(false);
+ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&app.classList.contains("full")){e.stopImmediatePropagation();setFull(false)}},true);
+})();
+
 (()=>{const m=document.querySelector(".cur");let x0=null,lp=null;
  m.addEventListener("touchstart",e=>{x0=e.touches[0].clientX;lp=setTimeout(()=>{lp=null;const r=ex?evalStr(ex):lastResult();if(r!=null&&isFinite(r)&&navigator.clipboard)navigator.clipboard.writeText(numStr(r)).then(()=>toast("Kopyalandı")).catch(()=>{})},550)},{passive:true});
  m.addEventListener("touchmove",e=>{if(x0!==null&&Math.abs(e.touches[0].clientX-x0)>40){clearTimeout(lp);lp=null;press("bs");x0=e.touches[0].clientX}},{passive:true});
