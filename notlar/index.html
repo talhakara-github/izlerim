@@ -383,7 +383,7 @@ async function sendToIzle(items){
 
 /* ----- Claude API ----- */
 async function claudeJSON(prompt){
-  const key=LSj("anth_key");
+  const key=String(LSj("anth_key")||"").replace(/[\s\u200B-\u200D\uFEFF"'“”]/g,"");
   const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"x-api-key":key,"anthropic-version":"2023-06-01","content-type":"application/json","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:LSj("anth_model")||"claude-haiku-5-5",max_tokens:4096,messages:[{role:"user",content:prompt}]})});
   let d={};try{d=await r.json()}catch(e){}
   if(!r.ok)throw new Error((d.error&&d.error.message)||("HTTP "+r.status));
@@ -410,8 +410,10 @@ function settings(){
   const model=LSj("anth_model")||"claude-haiku-5-5";
   const o=overlay(`<div class="shh"><button id="x">Vazgeç</button><b>Ayarlar</b><button class="done" id="s">Kaydet</button></div>
   <div class="lab">Claude (Anthropic API)</div>
-  <div class="fg"><input id="ak" type="password" autocomplete="off" placeholder="sk-ant-…" value="${esc(LSj("anth_key")||"")}"><select id="am"><option value="claude-haiku-5-5" ${model==="claude-haiku-5-5"?"selected":""}>Haiku: hızlı ve ucuz (önerilen)</option><option value="claude-sonnet-5-5" ${model==="claude-sonnet-5-5"?"selected":""}>Sonnet: daha akıllı</option></select></div>
-  <p style="font-size:13px;color:var(--tx2);margin:-14px 16px 22px">Anahtar: <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> → API Keys. Kullanım başına ücretlidir; anahtar yalnızca bu cihazda saklanır.</p>
+  <div class="fg"><input id="ak" type="password" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-1p-ignore placeholder="sk-ant-…" value="${esc(LSj("anth_key")||"")}"><select id="am"><option value="claude-haiku-5-5" ${model==="claude-haiku-5-5"?"selected":""}>Haiku: hızlı ve ucuz (önerilen)</option><option value="claude-sonnet-5-5" ${model==="claude-sonnet-5-5"?"selected":""}>Sonnet: daha akıllı</option></select></div>
+  <button class="danger" id="akTest" style="color:var(--blue);margin:-14px 0 8px">Claude anahtarını test et</button>
+  <p id="akMsg" style="font-size:13px;color:var(--tx2);margin:0 16px 22px;word-break:break-all"></p>
+  <p style="font-size:13px;color:var(--tx2);margin:-14px 16px 22px">Anahtar: <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> → API Keys. Kullanım başına ücretlidir; anahtar yalnızca bu cihazda saklanır.</p>
   <div class="lab">Senkron (GitHub Gist)</div>
   <div class="fg"><input id="gt" type="password" autocomplete="off" placeholder="github_pat_…" value="${esc(tok()||"")}"></div>
   <p style="font-size:13px;color:var(--tx2);margin:-14px 16px 22px">İzle ve Hesap'ta kullandığın anahtarın aynısı. Notlar Mac ve iPhone arasında bununla senkronlanır, İzle'ye ekleme de bununla çalışır.</p>
@@ -423,8 +425,21 @@ function settings(){
   o.querySelector("#bkSave").onclick=async()=>{const r=await icloudSave("notlar-yedek-"+bkDate()+".json",JSON.stringify({app:"notlar",v:1,at:Date.now(),store:STORE}),"bk_notlar");if(r){o.remove();toast(r==="share"?"Yedek hazır":"Yedek indirildi");render()}};
   o.querySelector("#bkLoad").onclick=()=>pickFile(d=>{const st=d&&d.app==="notlar"?d.store:(d&&d.notes?d:null);if(!st||!st.notes)return toast("Bu bir Not Defteri yedeği değil");const before=NOTES.length;STORE=mergeStore(STORE,{...st,notes:Object.fromEntries(Object.entries(st.notes).map(([k,v])=>[k,{...v,u:Math.max(v.u||0,(STORE.notes[k]&&STORE.notes[k].u)||0)+(STORE.notes[k]?0:1)}]))});persist();fromStore();render();o.remove();toast((NOTES.length-before)+" not geri geldi")});
   o.querySelector("#x").onclick=()=>o.remove();
-  const saveFields=()=>{const ak=o.querySelector("#ak").value.trim(),gt=o.querySelector("#gt").value.trim();LSj("anth_key",ak||null);LSj("anth_model",o.querySelector("#am").value);if(gt!==(tok()||"")){LSj("gh_token",gt||null);LSj("nt_gist",null);LSj("izle_gist",null)}};
+  const saveFields=()=>{const ak=o.querySelector("#ak").value.replace(/[\s\u200B-\u200D\uFEFF"'“”]/g,""),gt=o.querySelector("#gt").value.trim();LSj("anth_key",ak||null);LSj("anth_model",o.querySelector("#am").value);if(gt!==(tok()||"")){LSj("gh_token",gt||null);LSj("nt_gist",null);LSj("izle_gist",null)}};
   ["#ak","#gt","#am"].forEach(q=>o.querySelector(q).addEventListener("change",saveFields));
+  o.querySelector("#akTest").onclick=async()=>{
+    const m=o.querySelector("#akMsg");let k=o.querySelector("#ak").value.replace(/[\s\u200B-\u200D\uFEFF"'“”]/g,"");o.querySelector("#ak").value=k;
+    if(!k){m.textContent="Alan boş.";return}
+    const info=k.slice(0,12)+"…"+k.slice(-4)+" ("+k.length+" karakter)";
+    if(k.startsWith("github_pat_")||k.startsWith("ghp_")){m.textContent="✗ Bu bir GitHub anahtarı: "+info+". Claude anahtarı sk-ant-api ile başlar.";return}
+    if(!k.startsWith("sk-ant-")){m.textContent="✗ Claude anahtarı sk-ant- ile başlamalı. Girilen: "+info;return}
+    m.textContent="Test ediliyor… "+info;
+    try{const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"x-api-key":k,"anthropic-version":"2023-06-01","content-type":"application/json","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model:o.querySelector("#am").value,max_tokens:5,messages:[{role:"user",content:"merhaba"}]})});
+      const d=await r.json().catch(()=>({}));
+      if(r.ok){LSj("anth_key",k);LSj("anth_model",o.querySelector("#am").value);m.textContent="✓ Çalışıyor ve kaydedildi · "+info}
+      else m.textContent="✗ "+r.status+": "+((d.error&&d.error.message)||"hata")+" · "+info+(r.status===401?" → anahtar yanlış/eksik kopyalanmış veya silinmiş.":"");
+    }catch(e){m.textContent="✗ Bağlantı hatası: "+e.message}
+  };
   o.querySelector("#now").onclick=async()=>{saveFields();const m=o.querySelector("#syncMsg");if(!tok()){m.textContent="Önce GitHub anahtarını yapıştır.";return}m.textContent="Senkronlanıyor…";await syncNow();for(let i=0;i<40&&STATE.s==="run";i++)await new Promise(r=>setTimeout(r,250));m.textContent=STATE.s==="ok"?"✓ Senkron tamam · "+NOTES.length+" not":"⚠️ "+STATE.t;};
   o.querySelector("#s").onclick=()=>{
     const ak=o.querySelector("#ak").value.trim(),gt=o.querySelector("#gt").value.trim();
@@ -496,8 +511,12 @@ function showReply(r){
 }
 async function ask(text){
   CHAT.push({r:"u",t:text});busy=true;showReply(null);saveChat();
-  if(!LSj("anth_key")){busy=false;showReply({text:"Claude için Anthropic API anahtarını bir kez girmen gerekiyor.",buttons:[{label:"Anahtarı gir",run:()=>settings()}]});return}
-  if(!navigator.onLine){busy=false;showReply({text:"İnternet yok. Notu altta “+ Yeni not” ile elle ekleyebilirsin; Claude bağlantı gelince çalışır."});return}
+  if(!LSj("anth_key")||!navigator.onLine){
+    const url=(text.match(/https?:\/\/\S+/)||[""])[0];
+    const title=url&&text.trim()===url?url.replace(/^https?:\/\/(www\.)?/,"").split(/[/?#]/).slice(0,2).join(" · "):text.split("\n")[0].slice(0,120);
+    await saveNote({title,detail:text.trim()===url||text.split("\n").length<2?"":text,url,cat:"diger",done:false,at:Date.now()});
+    busy=false;const msg="Notu “Diğer” listesine kaydettim."+(LSj("anth_key")?" İnternet gelince Claude ile düzenleyebilirsin.":" Claude'un doğru listeye koyması için Anthropic anahtarını gir.");
+    CHAT.push({r:"a",t:msg});saveChat();showReply({text:msg,buttons:LSj("anth_key")?[]:[{label:"Anahtarı gir",run:()=>settings()}]});renderLog();return}
   const ctx=CATS.map(c=>{const a=NOTES.filter(n=>n.cat===c.id).map(n=>`- [${n.done?"x":" "}] (id:${n.id}) ${n.title}${n.detail?" — "+n.detail.slice(0,70):""}`);return `## ${c.name} (id:${c.id})\n${a.join("\n")||"(boş)"}`}).join("\n").slice(0,16000);
   const hist=CHAT.slice(-8,-1).map(m=>`${m.r==="u"?"Kullanıcı":"Asistan"}: ${m.t.slice(0,300)}`).join("\n");
   const prompt=`Sen Talha'nın kişisel not defteri asistanısın. Türkçe ve kısa yaz. Kullanıcının mesajı ya yeni not(lar)dır, ya mevcut notlar üzerinde bir komuttur, ya da sorudur.
