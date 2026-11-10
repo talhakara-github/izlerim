@@ -959,10 +959,22 @@ async function pump(){
 
 /* ---------- Listem ---------- */
 let LTAB=1,LTYPE='all',LSORT='recent';
+function bulkDrop(){
+  const keys=Object.keys(DATA).filter(k=>DATA[k].s===5);if(!keys.length)return;
+  const tvN=keys.filter(k=>k.startsWith('tv:')).length,mvN=keys.length-tvN;
+  const o=overlay('<h3>Hepsini Bıraktım yap</h3><p class="note">Netleştir\'deki '+(tvN?tvN+' dizi':'')+(tvN&&mvN?' ve ':'')+(mvN?mvN+' film':'')+' “Bıraktım” olarak işaretlenecek. Hemen ardından geri alabilirsin.</p><div class="row"><button class="btn" id="bdNo" style="flex:1">Vazgeç</button><button class="btn pri" id="bdOk" style="flex:1">'+keys.length+' kaydı işaretle</button></div>');
+  o.querySelector('#bdNo').onclick=()=>o.close();
+  o.querySelector('#bdOk').onclick=()=>{
+    keys.forEach(k=>{DATA[k]={...DATA[k],s:2}});SV('marks',DATA);o.close();LTAB=2;renderList();try{strip()}catch(e){}
+    const u=overlay('<h3>'+keys.length+' kayıt Bıraktım\'a taşındı</h3><div class="row"><button class="btn" id="bdUndo" style="flex:1">Geri al</button><button class="btn pri" id="bdDone" style="flex:1">Tamam</button></div>');
+    u.querySelector('#bdDone').onclick=()=>u.close();
+    u.querySelector('#bdUndo').onclick=()=>{keys.forEach(k=>{if(DATA[k])DATA[k]={...DATA[k],s:5}});SV('marks',DATA);u.close();LTAB=5;renderList();try{strip()}catch(e){};toast('Geri alındı')};
+  };
+}
 function renderList(){
   const counts={1:0,2:0,3:0,4:0,5:0};Object.values(DATA).forEach(v=>{if(v.s)counts[v.s]++});
-  $('#oldBanner').innerHTML=counts[5]?'<div class="banner"><span class="ms" style="color:var(--old)">help</span><p><b>'+counts[5]+' dizi</b> netleştirilmeyi bekliyor. Bitirdin mi, bıraktın mı?</p><button class="btn vio" id="nfGo">Netleştir</button></div>':'';
-  if(counts[5])$('#nfGo').onclick=netlestir;
+  $('#oldBanner').innerHTML=counts[5]?'<div class="banner"><span class="ms" style="color:var(--old)">help</span><p><b>'+counts[5]+' dizi</b> netleştirilmeyi bekliyor. Bitirdin mi, bıraktın mı?</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn vio" id="nfGo">Netleştir</button><button class="btn" id="nfAll">Hepsini Bıraktım yap</button></div></div>':'';
+  if(counts[5]){$('#nfGo').onclick=netlestir;$('#nfAll').onclick=bulkDrop}
   const tabs=[1,2,4,3].concat(counts[5]?[5]:[]);
   $('#ltabs').innerHTML=tabs.map(s=>'<button class="tab'+(s===LTAB?' on':'')+'" data-s="'+s+'" style="'+(s===LTAB?'color:'+ST[s].c:'')+'"><span class="ms'+(s===LTAB?' f':'')+'" style="font-size:17px">'+ST[s].i+'</span>'+ST[s].l+' <em>'+counts[s]+'</em></button>').join('')+
     '<button class="tab'+(LTAB==='l'?' on':'')+'" data-s="l" style="'+(LTAB==='l'?'color:var(--like)':'')+'"><span class="ms f" style="font-size:17px">favorite</span>Beğendim <em>'+Object.values(DATA).filter(v=>v.l).length+'</em></button>';

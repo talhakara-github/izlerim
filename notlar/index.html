@@ -205,6 +205,7 @@ function renderHome(){
   <div class="smart">${card("today",I.today,"#007aff",today,"Bugün")}${card("all",I.all,"#636366",open.length,"Tümü")}</div>
   <h2>Listelerim</h2>
   <div class="group">${CATS.map(c=>`<button class="row" data-cat="${esc(c.id)}"><div class="lic" style="background:${colOf(c)}">${c.emoji}</div><span class="nm">${esc(c.name)}</span><span class="ct">${cnt[c.id]||0}</span>${CHEV}</button>`).join("")}</div>
+  ${(()=>{const n=Object.values(STORE.notes).filter(v=>v.del&&v.title).length;return n?`<div class="group" style="margin-top:22px"><button class="row" id="trash"><div class="lic" style="background:#8e8e93">🗑️</div><span class="nm">Son Silinenler</span><span class="ct">${n}</span>${CHEV}</button></div>`:""})()}
   <div style="display:flex;justify-content:flex-end;margin-top:6px"><button class="act" id="addList" style="color:var(--blue);min-height:44px;font-size:17px">Liste Ekle</button></div>`}
   </div>`;
   const qi=$("#q");qi.oninput=e=>{Q=e.target.value;const p=e.target.selectionStart;renderHome();const n=$("#q");n.focus();n.setSelectionRange(p,p)};
@@ -256,6 +257,7 @@ document.addEventListener("click",e=>{
   if(t.closest("#back")){VIEW={v:"home"};render();return}
   if(t.closest("#addList"))return listSheet();
   if(t.closest("#setBtn"))return settings();
+  if(t.closest("#trash"))return trashSheet();
   if(t.closest("#bkNag")){icloudSave("notlar-yedek-"+bkDate()+".json",JSON.stringify({app:"notlar",v:1,at:Date.now(),store:STORE}),"bk_notlar").then(r=>{if(r){toast(r==="share"?"Yedek hazır":"Yedek indirildi");render()}});return}
   if(t.closest("#editList"))return listSheet(catOf(VIEW.id));
   if(t.closest("#showDone")){SHOWDONE=!SHOWDONE;render();return}
@@ -313,7 +315,7 @@ async function saveNote(n){
 }
 async function delNotes(ids){
   const gone=NOTES.filter(n=>ids.includes(n.id)).map(n=>({...n}));const t=Date.now();
-  ids.forEach(id=>{if(STORE.notes[id])STORE.notes[id]={del:true,u:t}});
+  ids.forEach(id=>{if(STORE.notes[id])STORE.notes[id]={...STORE.notes[id],del:true,u:t,delAt:t}});
   persist();fromStore();render();return gone;
 }
 async function restore(list){for(const n of list)await saveNote(n)}
@@ -377,7 +379,12 @@ async function sendToIzle(items){
       ok++;
     }catch(e){miss.push(it.t)}
   }
-  if(ok)await gh("/gists/"+id,{method:"PATCH",body:JSON.stringify({files:{"izlerim-data.json":{content:JSON.stringify(data)}}})});
+  if(ok){
+    await gh("/gists/"+id,{method:"PATCH",body:JSON.stringify({files:{"izlerim-data.json":{content:JSON.stringify(data)}}})});
+    const chk=await readGistFile(id,"izlerim-data.json")||{};
+    const want=Object.keys(data).filter(k=>data[k].s===4&&data[k].at>Date.now()-600000);
+    if(want.some(k=>!(chk[k]&&chk[k].s)))throw new Error("İzle'ye yazılanlar doğrulanamadı, notlar silinmedi");
+  }
   return {ok,miss};
 }
 
@@ -405,6 +412,16 @@ async function icloudSave(name,text,key){
 }
 function pickFile(cb){const i=document.createElement("input");i.type="file";i.accept=".json,application/json";i.onchange=()=>{const f=i.files[0];if(f)f.text().then(t=>{try{cb(JSON.parse(t))}catch(e){toast("Dosya okunamadı")}})};i.click()}
 
+/* ----- Son Silinenler ----- */
+function trashSheet(){
+  const L=Object.entries(STORE.notes).filter(([,v])=>v.del&&v.title).sort((a,b)=>(b[1].delAt||b[1].u)-(a[1].delAt||a[1].u));
+  const o=overlay(`<div class="shh"><button id="x">Kapat</button><b>Son Silinenler</b><button class="done" id="all">Tümünü geri al</button></div>
+  <div class="fg">${L.map(([id,v])=>`<button class="row" data-r="${id}"><span class="nm" style="font-size:15px">${esc(v.title)}<br><span style="color:var(--tx2);font-size:13px">${esc(catOf(v.cat).name)} · ${new Date(v.delAt||v.u).toLocaleString("tr-TR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span></span><span style="color:var(--blue);font-size:15px">Geri al</span></button>`).join("")}</div>`);
+  const back=ids=>{const t=Date.now();ids.forEach(id=>{const v={...STORE.notes[id]};delete v.del;delete v.delAt;v.u=t;STORE.notes[id]=v});persist();fromStore();render()};
+  o.querySelector("#x").onclick=()=>o.remove();
+  o.querySelector("#all").onclick=()=>{back(L.map(x=>x[0]));o.remove();toast(L.length+" not geri geldi")};
+  o.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{back([b.dataset.r]);b.remove();toast("Geri alındı")});
+}
 /* ----- Ayarlar ----- */
 function settings(){
   const model=LSj("anth_model")||"claude-haiku-5-5";
@@ -456,7 +473,7 @@ function importHash(){
   try{let b=m[1].replace(/-/g,"+").replace(/_/g,"/");while(b.length%4)b+="=";
     const d=JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(b),c=>c.charCodeAt(0))));
     let n=0;const t=Date.now();
-    (d.notes||[]).forEach(x=>{if(x&&x.id&&!STORE.notes[x.id]){STORE.notes[x.id]={title:x.title,detail:x.detail||"",url:x.url||"",cat:x.cat,done:!!x.done,at:x.at||t,u:t};n++}});
+    (d.notes||[]).forEach(x=>{if(x&&x.id&&(!STORE.notes[x.id]||STORE.notes[x.id].del)){STORE.notes[x.id]={title:x.title,detail:x.detail||"",url:x.url||"",cat:x.cat,done:!!x.done,at:x.at||t,u:t};n++}});
     if(d.cats&&d.cats.length){STORE.cats=d.cats;STORE.catsU=t}
     if(d.collapsed&&!STORE.uiU){STORE.ui={collapsed:d.collapsed};STORE.uiU=t}
     persist();fromStore();render();toast(n+" not içe aktarıldı");
